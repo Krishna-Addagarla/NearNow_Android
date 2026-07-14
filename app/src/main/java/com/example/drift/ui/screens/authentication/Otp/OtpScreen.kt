@@ -1,5 +1,7 @@
 package com.example.drift.ui.screens.authentication.Otp
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -38,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -45,7 +49,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.drift.ui.screens.authentication.Otp.OtpScreen
+import com.example.drift.data.remote.FirebaseAuthManager
 import kotlinx.coroutines.delay
 
 object NearNowColors {
@@ -62,13 +66,16 @@ private const val RESEND_SECONDS = 28
 
 @Composable
 fun OtpScreen(
-    phoneNumber: String = "+91 98765 43210",
+    verificationId: String,
+    phoneNumber: String,
     onBackClick: () -> Unit = {},
-    onVerifyClick: (code: String) -> Unit = {},
+    onVerifySuccess: (token: String) -> Unit = {},
     onResendClick: () -> Unit = {}
 ) {
     var otp by remember { mutableStateOf("") }
     var secondsLeft by remember { mutableIntStateOf(RESEND_SECONDS) }
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // Countdown timer for resend
     LaunchedEffect(secondsLeft) {
@@ -180,8 +187,26 @@ fun OtpScreen(
 
             Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                 Button(
-                    onClick = { onVerifyClick(otp) },
-                    enabled = otp.length == OTP_LENGTH,
+                    onClick = {
+                        isLoading = true
+                        FirebaseAuthManager.verifyOtpAndAuthenticate(
+                            verificationId = verificationId,
+                            code = otp,
+                            onSuccess = { token ->
+                                (context as? Activity)?.runOnUiThread {
+                                    isLoading = false
+                                    onVerifySuccess(token)
+                                }
+                            },
+                            onFailure = { exception ->
+                                (context as? Activity)?.runOnUiThread {
+                                    isLoading = false
+                                    Toast.makeText(context, "Verification failed: ${exception.localizedMessage}", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        )
+                    },
+                    enabled = otp.length == OTP_LENGTH && !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -193,13 +218,20 @@ fun OtpScreen(
                         disabledContentColor = NearNowColors.Ink.copy(alpha = 0.6f)
                     )
                 ) {
-                    Text(
-                        text = "VERIFY",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = NearNowColors.Ink,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "VERIFY",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 15.sp
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -276,9 +308,10 @@ private fun OtpInputRow(
 @Composable
 fun OtpScreenPreview (){
     OtpScreen(
-        phoneNumber = "",
+        verificationId = "mock-id",
+        phoneNumber = "+91 98765 00001",
         onBackClick = {},
-        onVerifyClick = {},
+        onVerifySuccess = {},
         onResendClick = {}
     )
 }

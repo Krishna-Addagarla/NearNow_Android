@@ -7,7 +7,7 @@ sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Onboarding : Screen("onboarding")
     object PhoneNumber : Screen("phone_number")
-    object Otp : Screen("otp")
+    data class Otp(val verificationId: String, val phoneNumber: String) : Screen("otp/$verificationId")
     
     // Profile setup multi-step flow
     object ProfileSetupName : Screen("profile_setup_name")

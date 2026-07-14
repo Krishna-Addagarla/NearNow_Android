@@ -413,7 +413,7 @@ fun DiscoveryMapNode(
                 color = Paper,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = Alignment.CenterHorizontally,
+                textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -423,7 +423,7 @@ fun DiscoveryMapNode(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = Alignment.CenterHorizontally
+                textAlign = TextAlign.Center
             )
         }
     }

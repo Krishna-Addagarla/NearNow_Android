@@ -1,5 +1,7 @@
 package com.example.drift.ui.screens.authentication.PhoneNumber
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -27,12 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.drift.data.remote.FirebaseAuthManager
 import com.example.drift.ui.screens.onBoaring.OnboardingScreen
 
 // ---------- Color Tokens ----------
@@ -47,10 +53,12 @@ object NearNowColors {
 
 @Composable
 fun PhoneNumberScreen(
-    onSendCodeClick: (countryCode: String, phoneNumber: String) -> Unit = { _, _ -> }
+    onSendCodeSuccess: (verificationId: String, fullPhoneNumber: String) -> Unit = { _, _ -> }
 ) {
     var countryCode by remember { mutableStateOf("+91") }
     var phoneNumber by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -118,6 +126,7 @@ fun PhoneNumberScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Info text
             Text(
                 text = "Standard SMS rates may apply",
                 color = NearNowColors.Slate.copy(alpha = 0.7f),
@@ -127,23 +136,58 @@ fun PhoneNumberScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { onSendCodeClick(countryCode, phoneNumber) },
+                onClick = {
+                    if (phoneNumber.trim().isEmpty()) {
+                        Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    isLoading = true
+                    val fullPhone = "$countryCode${phoneNumber.trim()}"
+                    val activity = context as? Activity
+                    if (activity != null) {
+                        FirebaseAuthManager.sendOtp(
+                            phoneNumber = fullPhone,
+                            activity = activity,
+                            onCodeSent = { verificationId ->
+                                isLoading = false
+                                onSendCodeSuccess(verificationId, fullPhone)
+                            },
+                            onVerificationFailed = { exception ->
+                                isLoading = false
+                                Toast.makeText(context, "Failed: ${exception.localizedMessage}", Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    } else {
+                        isLoading = false
+                        Toast.makeText(context, "Error: Context is not an Activity", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = NearNowColors.Signal,
-                    contentColor = NearNowColors.Ink
+                    contentColor = NearNowColors.Ink,
+                    disabledContainerColor = NearNowColors.Signal.copy(alpha = 0.5f),
+                    disabledContentColor = NearNowColors.Ink.copy(alpha = 0.5f)
                 )
             ) {
-                Text(
-                    text = "SEND CODE",
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.5.sp,
-                    fontSize = 15.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = NearNowColors.Ink,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "SEND CODE",
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.5.sp,
+                        fontSize = 15.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(40.dp))

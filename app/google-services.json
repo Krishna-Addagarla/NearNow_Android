@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713218964330",
+    "project_id": "nearnow-6e8eb",
+    "storage_bucket": "nearnow-6e8eb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713218964330:android:c69d7923a330faeb644313",
+        "android_client_info": {
+          "package_name": "com.example.drift"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxrENouT0igcE9K_rq_PbPOwzehkYwxOo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

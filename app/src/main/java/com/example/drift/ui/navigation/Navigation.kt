@@ -93,19 +93,20 @@ fun NavHost(
             
             is Screen.PhoneNumber -> {
                 PhoneNumberScreen(
-                    onSendCodeClick = { countryCode, phone ->
-                        navController.navigate(Screen.Otp)
+                    onSendCodeSuccess = { verificationId, fullPhone ->
+                        navController.navigate(Screen.Otp(verificationId, fullPhone))
                     }
                 )
             }
             
             is Screen.Otp -> {
                 OtpScreen(
-                    phoneNumber = "+91 98765 00001",
+                    verificationId = screen.verificationId,
+                    phoneNumber = screen.phoneNumber,
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onVerifyClick = { code ->
+                    onVerifySuccess = { token ->
                         navController.navigate(Screen.ProfileSetupName)
                     },
                     onResendClick = {}
