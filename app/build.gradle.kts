@@ -3,14 +3,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    id("kotlin-kapt")
+    alias(libs.plugins.hilt.android)
 }
 
 android {
-    namespace = "com.example.drift"
+    namespace = "com.example.nearnow"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.drift"
+        applicationId = "com.example.nearnow"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
@@ -54,6 +56,17 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging)
     implementation(libs.okhttp)
+    
+    // Retrofit & Gson
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.gson)
+
+    // Dagger Hilt DI
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

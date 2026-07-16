@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Drift"
+rootProject.name = "NearNow"
 include(":app")
  
