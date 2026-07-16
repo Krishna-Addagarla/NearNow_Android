@@ -33,6 +33,9 @@ import com.example.drift.ui.theme.Ink
 import com.example.drift.ui.theme.Paper
 import com.example.drift.ui.theme.Signal
 import com.example.drift.ui.theme.Slate
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
 
 @Composable
 fun ActiveChatScreen(
@@ -159,40 +162,7 @@ fun ActiveChatScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Proximity strip: ACTIVE WITHIN 500M RADIUS (Dynamic Warn / Grace states)
-                val stripColor = when {
-                    meetupModeActive -> Coral
-                    currentDistance >= 450 -> Coral
-                    else -> Signal
-                }
-                val stripText = when {
-                    meetupModeActive && currentDistance > 500 -> "• IN TRANSIT: ${currentDistance}M (GRACE ACTIVE)"
-                    meetupModeActive -> "• MEETUP MODE ACTIVE: ${currentDistance}M (30M GRACE)"
-                    currentDistance >= 450 -> "• WARNING: PROXIMITY LIMIT NEAR (${currentDistance}M)"
-                    else -> "• ACTIVE WITHIN 500M RADIUS"
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, stripColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                        .background(if (meetupModeActive || currentDistance >= 450) Coral.copy(alpha = 0.05f) else Color.Transparent)
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stripText,
-                        color = stripColor,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
-                        letterSpacing = 1.sp
-                    )
-                }
+                ProximityTicker(distance = currentDistance, meetupModeActive = meetupModeActive)
 
                 // Scrolling Chat messages
                 LazyColumn(
@@ -345,6 +315,138 @@ fun ActiveChatScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ProximityTicker(
+    distance: Int,
+    meetupModeActive: Boolean
+) {
+    val maxRadius = 500f // 500m base limit
+    val pct = (distance / maxRadius).coerceIn(0f, 1f)
+
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_alpha"
+    )
+
+    val color = when {
+        meetupModeActive -> Coral
+        distance >= 450 -> Coral
+        else -> Signal
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF0F172A))
+            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .padding(14.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Pulsing connection status row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(if (meetupModeActive) Coral.copy(alpha = pulseAlpha) else Color(0xFF00E6A8).copy(alpha = pulseAlpha))
+                    )
+                    Text(
+                        text = if (meetupModeActive) "MEETUP ACTIVE" else "LIVE PROXIMITY CONNECTION",
+                        color = Paper,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                Text(
+                    text = "${distance}m",
+                    color = color,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp
+                )
+            }
+
+            // Proximity track line mapping relative distance
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp)
+            ) {
+                val trackY = size.height / 2
+                val startX = 10f
+                val endX = size.width - 10f
+                val widthRange = endX - startX
+
+                // Draw background track line
+                drawLine(
+                    color = Color(0xFF1E293B),
+                    start = Offset(startX, trackY),
+                    end = Offset(endX, trackY),
+                    strokeWidth = 6f
+                )
+
+                // Draw active connection range line
+                val matchX = startX + (widthRange * (1f - pct))
+                drawLine(
+                    color = color.copy(alpha = 0.7f),
+                    start = Offset(startX, trackY),
+                    end = Offset(matchX, trackY),
+                    strokeWidth = 6f
+                )
+
+                // Draw Self node (You)
+                drawCircle(
+                    color = Paper,
+                    radius = 8f,
+                    center = Offset(startX, trackY)
+                )
+
+                // Draw Match node
+                drawCircle(
+                    color = color,
+                    radius = 8f,
+                    center = Offset(matchX, trackY)
+                )
+            }
+
+            // Dynamic distance readout status subtitle
+            Text(
+                text = when {
+                    meetupModeActive -> "Grace active · Closing in for real-world meeting"
+                    distance < 200 -> "Sweet spot reached · Proximity overlap healthy"
+                    distance >= 450 -> "Warning · Moving out of range soon"
+                    else -> "Connected · Stable signal range"
+                },
+                color = Slate,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

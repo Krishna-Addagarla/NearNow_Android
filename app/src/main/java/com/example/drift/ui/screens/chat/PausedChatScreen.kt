@@ -33,6 +33,11 @@ import com.example.drift.ui.theme.Ink
 import com.example.drift.ui.theme.Paper
 import com.example.drift.ui.theme.Signal
 import com.example.drift.ui.theme.Slate
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.scale
+import androidx.compose.foundation.clickable
+import kotlinx.coroutines.delay
 
 @Composable
 fun PausedChatScreen(
@@ -41,6 +46,14 @@ fun PausedChatScreen(
     onConnectPermanentlyClick: () -> Unit = {}
 ) {
     var pendingPermanentState by remember { mutableStateOf(false) }
+    var showCelebration by remember { mutableStateOf(false) }
+
+    if (pendingPermanentState && !showCelebration) {
+        LaunchedEffect(Unit) {
+            delay(1500) // Simulate other user approving
+            showCelebration = true
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -213,11 +226,9 @@ fun PausedChatScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Connect Permanently Action button
                 Button(
                     onClick = {
                         pendingPermanentState = true
-                        onConnectPermanentlyClick()
                     },
                     enabled = !pendingPermanentState,
                     modifier = Modifier
@@ -241,6 +252,119 @@ fun PausedChatScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+
+        // Gold lock connection celebration overlay
+        if (showCelebration) {
+            val infiniteTransition = rememberInfiniteTransition(label = "celebration")
+            val scale by infiniteTransition.animateFloat(
+                initialValue = 0.96f,
+                targetValue = 1.04f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1200, easing = EaseInOutCubic),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "scale"
+            )
+
+            val goldGradient = Brush.linearGradient(
+                colors = listOf(
+                    Color(0xFFFFD700), // Gold
+                    Color(0xFFFFA500), // Orange Gold
+                    Color(0xFFFF8C00)  // Dark Orange
+                )
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Ink.copy(alpha = 0.96f))
+                    .clickable { /* Eat clicks */ }
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(160.dp)
+                            .scale(scale),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val ringRadius = size.width * 0.22f
+                            val center = size.width / 2
+
+                            // Left Gold Interlocking Ring
+                            drawCircle(
+                                brush = goldGradient,
+                                radius = ringRadius,
+                                center = Offset(center - 30f, center),
+                                style = Stroke(width = 10f)
+                            )
+
+                            // Right Gold Interlocking Ring
+                            drawCircle(
+                                brush = goldGradient,
+                                radius = ringRadius,
+                                center = Offset(center + 30f, center),
+                                style = Stroke(width = 10f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Text(
+                        text = "Connection Locked",
+                        color = Paper,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Proximity boundaries have been lifted! You and ${session.user.name} are now connected permanently.",
+                        color = Slate,
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(48.dp))
+
+                    Button(
+                        onClick = {
+                            showCelebration = false
+                            pendingPermanentState = false
+                            onConnectPermanentlyClick()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD700),
+                            contentColor = Ink
+                        )
+                    ) {
+                        Text(
+                            text = "ENTER CHAT",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 15.sp
+                        )
+                    }
+                }
             }
         }
     }
