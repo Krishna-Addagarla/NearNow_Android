@@ -86,7 +86,8 @@ fun DiscoveryMapScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 80.dp) // Nav bar padding
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(bottom = 72.dp) // Nav bar padding
             ) {
                 Spacer(modifier = Modifier.height(48.dp))
 

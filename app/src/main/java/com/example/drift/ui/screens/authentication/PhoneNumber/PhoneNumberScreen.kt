@@ -3,6 +3,7 @@ package com.example.drift.ui.screens.authentication.PhoneNumber
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,15 +11,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -39,7 +42,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.drift.data.remote.FirebaseAuthManager
-import com.example.drift.ui.screens.onBoaring.OnboardingScreen
 
 // ---------- Color Tokens ----------
 object NearNowColors {
@@ -59,6 +61,7 @@ fun PhoneNumberScreen(
     var phoneNumber by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -66,131 +69,141 @@ fun PhoneNumberScreen(
             .background(NearNowColors.Ink)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(64.dp))
-
-            // Eyebrow label: "IDENTITY · 01"
-            Text(
-                text = "IDENTITY · 01",
-                color = NearNowColors.Signal,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Headline
-            Text(
-                text = "What's your\nnumber?",
-                color = NearNowColors.Paper,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.Bold,
-                fontSize = 34.sp,
-                lineHeight = 40.sp
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Subtitle
-            Text(
-                text = "No password. No email. Just a code.",
-                color = NearNowColors.Slate,
-                fontSize = 15.sp,
-                lineHeight = 22.sp
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Country code + phone number row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
-            ) {
-                CountryCodeField(
-                    value = countryCode,
-                    onValueChange = { countryCode = it },
-                    modifier = Modifier.width(72.dp)
-                )
-
-                PhoneNumberField(
-                    value = phoneNumber,
-                    onValueChange = { phoneNumber = it },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Info text
-            Text(
-                text = "Standard SMS rates may apply",
-                color = NearNowColors.Slate.copy(alpha = 0.7f),
-                fontSize = 12.sp
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = {
-                    if (phoneNumber.trim().isEmpty()) {
-                        Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    isLoading = true
-                    val fullPhone = "$countryCode${phoneNumber.trim()}"
-                    val activity = context as? Activity
-                    if (activity != null) {
-                        FirebaseAuthManager.sendOtp(
-                            phoneNumber = fullPhone,
-                            activity = activity,
-                            onCodeSent = { verificationId ->
-                                isLoading = false
-                                onSendCodeSuccess(verificationId, fullPhone)
-                            },
-                            onVerificationFailed = { exception ->
-                                isLoading = false
-                                Toast.makeText(context, "Failed: ${exception.localizedMessage}", Toast.LENGTH_LONG).show()
-                            }
-                        )
-                    } else {
-                        isLoading = false
-                        Toast.makeText(context, "Error: Context is not an Activity", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                enabled = !isLoading,
+            Column(
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = NearNowColors.Signal,
-                    contentColor = NearNowColors.Ink,
-                    disabledContainerColor = NearNowColors.Signal.copy(alpha = 0.5f),
-                    disabledContentColor = NearNowColors.Ink.copy(alpha = 0.5f)
-                )
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = NearNowColors.Ink,
-                        modifier = Modifier.size(24.dp)
+                Spacer(modifier = Modifier.height(64.dp))
+
+                // Eyebrow label: "IDENTITY · 01"
+                Text(
+                    text = "IDENTITY · 01",
+                    color = NearNowColors.Signal,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp,
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Headline
+                Text(
+                    text = "What's your\nnumber?",
+                    color = NearNowColors.Paper,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 34.sp,
+                    lineHeight = 40.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Subtitle
+                Text(
+                    text = "No password. No email. Just a code.",
+                    color = NearNowColors.Slate,
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Country code + phone number row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+                ) {
+                    CountryCodeField(
+                        value = countryCode,
+                        onValueChange = { countryCode = it },
+                        modifier = Modifier.width(72.dp)
                     )
-                } else {
-                    Text(
-                        text = "SEND CODE",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
+
+                    PhoneNumberField(
+                        value = phoneNumber,
+                        onValueChange = { phoneNumber = it },
+                        modifier = Modifier.weight(1f)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Info text
+                Text(
+                    text = "Standard SMS rates may apply",
+                    color = NearNowColors.Slate.copy(alpha = 0.7f),
+                    fontSize = 12.sp
+                )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 16.dp)
+            ) {
+                Button(
+                    onClick = {
+                        if (phoneNumber.trim().isEmpty()) {
+                            Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        isLoading = true
+                        val fullPhone = "$countryCode${phoneNumber.trim()}"
+                        val activity = context as? Activity
+                        if (activity != null) {
+                            FirebaseAuthManager.sendOtp(
+                                phoneNumber = fullPhone,
+                                activity = activity,
+                                onCodeSent = { verificationId ->
+                                    isLoading = false
+                                    onSendCodeSuccess(verificationId, fullPhone)
+                                },
+                                onVerificationFailed = { exception ->
+                                    isLoading = false
+                                    Toast.makeText(context, "Failed: ${exception.localizedMessage}", Toast.LENGTH_LONG).show()
+                                }
+                            )
+                        } else {
+                            isLoading = false
+                            Toast.makeText(context, "Error: Context is not an Activity", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = NearNowColors.Signal,
+                        contentColor = NearNowColors.Ink,
+                        disabledContainerColor = NearNowColors.Signal.copy(alpha = 0.5f),
+                        disabledContentColor = NearNowColors.Ink.copy(alpha = 0.5f)
+                    )
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = NearNowColors.Ink,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "SEND CODE",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 15.sp
+                        )
+                    }
+                }
+            }
         }
     }
 }

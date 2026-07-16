@@ -20,6 +20,7 @@ import com.example.drift.ui.screens.invitation.InviteListScreen
 import com.example.drift.ui.screens.onBoaring.OnboardingScreen
 import com.example.drift.ui.screens.onBoaring.SplashScreen
 import com.example.drift.ui.screens.premium.PaywallScreen
+import com.example.drift.ui.screens.profile.ProfileScreen
 import com.example.drift.ui.screens.profileSetUp.ProfilePhotosScreen
 import com.example.drift.ui.screens.profileSetUp.ProfileRadiusScreen
 import com.example.drift.ui.screens.profileSetUp.ProfileStepScreen
@@ -155,6 +156,7 @@ fun NavHost(
                         when (tab) {
                             "Chats" -> navController.navigate(Screen.ChatList)
                             "Invites" -> navController.navigate(Screen.InviteList)
+                            "Me" -> navController.navigate(Screen.Profile)
                         }
                     },
                     onNavigateToChatCompose = { userId ->
@@ -182,6 +184,7 @@ fun NavHost(
                         when (tab) {
                             "Nearby" -> navController.clearAndNavigate(Screen.DiscoveryMap)
                             "Invites" -> navController.clearAndNavigate(Screen.InviteList)
+                            "Me" -> navController.navigate(Screen.Profile)
                         }
                     }
                 )
@@ -244,6 +247,7 @@ fun NavHost(
                         when (tab) {
                             "Nearby" -> navController.clearAndNavigate(Screen.DiscoveryMap)
                             "Chats" -> navController.clearAndNavigate(Screen.ChatList)
+                            "Me" -> navController.navigate(Screen.Profile)
                         }
                     }
                 )
@@ -282,6 +286,24 @@ fun NavHost(
                     onStartTrialClick = { tier ->
                         // Unlock benefits and clear paywall stack
                         navController.popBackStack()
+                    }
+                )
+            }
+            
+            is Screen.Profile -> {
+                ProfileScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onTabSelect = { tab ->
+                        when (tab) {
+                            "Nearby" -> navController.clearAndNavigate(Screen.DiscoveryMap)
+                            "Invites" -> navController.clearAndNavigate(Screen.InviteList)
+                            "Chats" -> navController.clearAndNavigate(Screen.ChatList)
+                        }
+                    },
+                    onLogoutClick = {
+                        navController.clearAndNavigate(Screen.PhoneNumber)
                     }
                 )
             }

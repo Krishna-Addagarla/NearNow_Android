@@ -28,4 +28,5 @@ sealed class Screen(val route: String) {
     
     object InviteCreate : Screen("invite_create")
     object Paywall : Screen("paywall")
+    object Profile : Screen("profile")
 }

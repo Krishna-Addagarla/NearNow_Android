@@ -3,6 +3,8 @@ package com.example.drift.ui.screens.authentication.Otp
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -76,6 +79,7 @@ fun OtpScreen(
     var secondsLeft by remember { mutableIntStateOf(RESEND_SECONDS) }
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     // Countdown timer for resend
     LaunchedEffect(secondsLeft) {
@@ -92,100 +96,108 @@ fun OtpScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Back button
-            IconButton(
-                onClick = onBackClick,
+            Column(
                 modifier = Modifier
-                    .padding(start = 16.dp)
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(NearNowColors.FieldFill)
+                    .weight(1f)
+                    .verticalScroll(scrollState)
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = NearNowColors.Paper
-                )
-            }
+                Spacer(modifier = Modifier.height(48.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-
-                Text(
-                    text = "IDENTITY · 02",
-                    color = NearNowColors.Signal,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Enter the code",
-                    color = NearNowColors.Paper,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "Sent to $phoneNumber",
-                    color = NearNowColors.Slate,
-                    fontSize = 15.sp
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                OtpInputRow(
-                    otp = otp,
-                    onOtpChange = { newValue ->
-                        if (newValue.length <= OTP_LENGTH && newValue.all { it.isDigit() }) {
-                            otp = newValue
-                        }
-                    },
-                    length = OTP_LENGTH
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Resend timer / link
-                if (secondsLeft > 0) {
-                    Text(
-                        text = "RESEND IN 0:%02d".format(secondsLeft),
-                        color = NearNowColors.Slate,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp,
-                        letterSpacing = 1.sp
+                // Back button
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(NearNowColors.FieldFill)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = NearNowColors.Paper
                     )
-                } else {
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+
                     Text(
-                        text = "RESEND CODE",
+                        text = "IDENTITY · 02",
                         color = NearNowColors.Signal,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 13.sp,
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            secondsLeft = RESEND_SECONDS
-                            onResendClick()
-                        }
+                        letterSpacing = 2.sp,
+                        fontWeight = FontWeight.Medium
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Enter the code",
+                        color = NearNowColors.Paper,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Sent to $phoneNumber",
+                        color = NearNowColors.Slate,
+                        fontSize = 15.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    OtpInputRow(
+                        otp = otp,
+                        onOtpChange = { newValue ->
+                            if (newValue.length <= OTP_LENGTH && newValue.all { it.isDigit() }) {
+                                otp = newValue
+                            }
+                        },
+                        length = OTP_LENGTH
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Resend timer / link
+                    if (secondsLeft > 0) {
+                        Text(
+                            text = "RESEND IN 0:%02d".format(secondsLeft),
+                            color = NearNowColors.Slate,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                            letterSpacing = 1.sp
+                        )
+                    } else {
+                        Text(
+                            text = "RESEND CODE",
+                            color = NearNowColors.Signal,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                            letterSpacing = 1.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                secondsLeft = RESEND_SECONDS
+                                onResendClick()
+                            }
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+            Column(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp)
+            ) {
                 Button(
                     onClick = {
                         isLoading = true
@@ -233,7 +245,7 @@ fun OtpScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

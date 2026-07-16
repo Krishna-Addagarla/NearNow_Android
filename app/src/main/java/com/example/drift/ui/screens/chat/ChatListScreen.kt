@@ -61,7 +61,8 @@ fun ChatListScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp) // Nav bar space
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 72.dp) // Nav bar space
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 

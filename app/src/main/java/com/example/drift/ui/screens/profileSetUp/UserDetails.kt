@@ -2,6 +2,8 @@ package com.example.drift.ui.screens.profileSetUp
 
 import androidx.compose.ui.tooling.preview.Preview
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -62,6 +65,8 @@ fun ProfileSetupStepShell(
     onSecondaryClick: () -> Unit = {},
     body: @Composable () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -69,52 +74,64 @@ fun ProfileSetupStepShell(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Top progress bar
-            StepProgressBar(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                currentStep = stepNumber,
-                totalSteps = totalSteps
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
-                Text(
-                    text = stepLabel,
-                    color = NearNowColors.Signal,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    letterSpacing = 1.5.sp,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = title,
-                    color = NearNowColors.Paper,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 26.sp,
-                    lineHeight = 31.sp
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-
-            // Scrollable / flexible body content unique to each step
-            Box(
+            Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .verticalScroll(scrollState)
             ) {
-                body()
+                Spacer(modifier = Modifier.height(48.dp))
+
+                // Top progress bar
+                StepProgressBar(
+                    modifier = Modifier.padding(horizontal = 24.dp),
+                    currentStep = stepNumber,
+                    totalSteps = totalSteps
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    Text(
+                        text = stepLabel,
+                        color = NearNowColors.Signal,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        letterSpacing = 1.5.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = title,
+                        color = NearNowColors.Paper,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 26.sp,
+                        lineHeight = 31.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+
+                // Scrollable / flexible body content unique to each step
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    body()
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+            Column(
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp)
+            ) {
                 Button(
                     onClick = onPrimaryClick,
                     enabled = primaryEnabled,
@@ -161,7 +178,7 @@ fun ProfileSetupStepShell(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

@@ -35,10 +35,10 @@ import kotlin.math.roundToInt
 @Composable
 fun ProfileRadiusScreen(
     minMeters: Int = 100,
-    maxMeters: Int = 2000,
+    maxMeters: Int = 50000,
     onStartExploringClick: (radiusMeters: Int) -> Unit = {}
 ) {
-    var radiusMeters by remember { mutableFloatStateOf(500f) }
+    var radiusMeters by remember { mutableFloatStateOf(2000f) }
 
     ProfileSetupStepShell(
         stepNumber = 4,

@@ -8,6 +8,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -47,7 +52,8 @@ fun DiscoveryListScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp) // Leave room for bottom navigation
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 72.dp) // Leave room for bottom navigation
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -277,17 +283,24 @@ fun DiscoveryBottomBar(
             .background(Color(0xFF070B14))
             .border(width = 0.5.dp, color = Color(0xFF1A2438))
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .height(68.dp),
+            .height(72.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
         tabs.forEach { tab ->
             val isSelected = tab == selectedTab
+            val icon = when (tab) {
+                "Nearby" -> Icons.Default.LocationOn
+                "Invites" -> Icons.Default.Send
+                "Chats" -> Icons.Default.MailOutline
+                else -> Icons.Default.Person
+            }
+
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .clickable { onTabClick(tab) }
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -303,10 +316,19 @@ fun DiscoveryBottomBar(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
+                Icon(
+                    imageVector = icon,
+                    contentDescription = tab,
+                    tint = if (isSelected) Signal else Slate.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
                     text = tab,
                     color = if (isSelected) Signal else Slate.copy(alpha = 0.7f),
-                    fontSize = 13.sp,
+                    fontSize = 11.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )
             }

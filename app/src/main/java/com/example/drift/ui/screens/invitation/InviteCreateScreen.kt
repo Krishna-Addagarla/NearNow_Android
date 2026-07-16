@@ -1,5 +1,7 @@
 package com.example.drift.ui.screens.invitation
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,9 +39,10 @@ fun InviteCreateScreen(
     var selectedCategory by remember { mutableStateOf(InviteCategory.COFFEE) }
     var titleText by remember { mutableStateOf("Coffee near Jubilee Hills?") }
     var descText by remember { mutableStateOf("Heading there in ~30 min. Chill vibes.") }
-    var radiusValue by remember { mutableStateOf(500f) } // default 500m
+    var radiusValue by remember { mutableStateOf(2000f) } // default 2km00m
 
     val maxCharLimit = 60
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -50,210 +53,217 @@ fun InviteCreateScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Header Back row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1E293B))
+                Spacer(modifier = Modifier.height(48.dp))
+
+                // Header Back row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Paper
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Serif Title
-            Text(
-                text = "New invite",
-                color = Paper,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Category tag selection
-            Text(
-                text = "CATEGORY",
-                color = Slate,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                InviteCategory.values().forEach { category ->
-                    val isSelected = category == selectedCategory
-                    Box(
+                    IconButton(
+                        onClick = onBackClick,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(if (isSelected) Coral else Color.Transparent)
-                            .border(
-                                width = 1.dp,
-                                color = if (isSelected) Coral else Slate.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .clickable { selectedCategory = category }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1E293B))
                     ) {
-                        Text(
-                            text = category.name,
-                            color = if (isSelected) Paper else Slate,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            letterSpacing = 0.5.sp
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Paper
                         )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
-            // Title input container (60-char title limit)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+                // Serif Title
                 Text(
-                    text = "TITLE",
+                    text = "New invite",
+                    color = Paper,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 32.sp
+                )
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Category tag selection
+                Text(
+                    text = "CATEGORY",
                     color = Slate,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
-                Text(
-                    text = "${titleText.length}/$maxCharLimit",
-                    color = if (titleText.length > maxCharLimit) Coral else Slate,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp
-                )
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF1E293B))
-                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                BasicTextField(
-                    value = titleText,
-                    onValueChange = { if (it.length <= maxCharLimit) titleText = it },
-                    textStyle = TextStyle(color = Paper, fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    InviteCategory.values().forEach { category ->
+                        val isSelected = category == selectedCategory
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isSelected) Coral else Color.Transparent)
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) Coral else Slate.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(6.dp)
+                                )
+                                .clickable { selectedCategory = category }
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = category.name,
+                                color = if (isSelected) Paper else Slate,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Title input container (60-char title limit)
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    decorationBox = { innerTextField ->
-                        if (titleText.isEmpty()) {
-                            Text(text = "Title of invite...", color = Slate.copy(alpha = 0.5f), fontSize = 15.sp)
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "TITLE",
+                        color = Slate,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "${titleText.length}/$maxCharLimit",
+                        color = if (titleText.length > maxCharLimit) Coral else Slate,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF1E293B))
+                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    BasicTextField(
+                        value = titleText,
+                        onValueChange = { if (it.length <= maxCharLimit) titleText = it },
+                        textStyle = TextStyle(color = Paper, fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { innerTextField ->
+                            if (titleText.isEmpty()) {
+                                Text(text = "Title of invite...", color = Slate.copy(alpha = 0.5f), fontSize = 15.sp)
+                            }
+                            innerTextField()
                         }
-                        innerTextField()
-                    }
-                )
-            }
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Description input container
-            Text(
-                text = "DESCRIPTION",
-                color = Slate,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF1E293B))
-                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
-                    .padding(16.dp)
-            ) {
-                BasicTextField(
-                    value = descText,
-                    onValueChange = { descText = it },
-                    textStyle = TextStyle(color = Paper, fontSize = 15.sp),
-                    modifier = Modifier.fillMaxSize(),
-                    decorationBox = { innerTextField ->
-                        if (descText.isEmpty()) {
-                            Text(text = "Details (e.g. heading there in 30 mins)...", color = Slate.copy(alpha = 0.5f), fontSize = 15.sp)
-                        }
-                        innerTextField()
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Radius Slider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // Description input container
                 Text(
-                    text = "RADIUS",
+                    text = "DESCRIPTION",
                     color = Slate,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
-                Text(
-                    text = "${radiusValue.toInt()}M",
-                    color = Coral,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(96.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF1E293B))
+                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    BasicTextField(
+                        value = descText,
+                        onValueChange = { descText = it },
+                        textStyle = TextStyle(color = Paper, fontSize = 15.sp),
+                        modifier = Modifier.fillMaxSize(),
+                        decorationBox = { innerTextField ->
+                            if (descText.isEmpty()) {
+                                Text(text = "Details (e.g. heading there in 30 mins)...", color = Slate.copy(alpha = 0.5f), fontSize = 15.sp)
+                            }
+                            innerTextField()
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Radius Slider
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "RADIUS",
+                        color = Slate,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "${radiusValue.toInt()}M",
+                        color = Coral,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Coral Slider
+                Slider(
+                    value = radiusValue,
+                    onValueChange = { radiusValue = it },
+                    valueRange = 100f..50000f,
+                    colors = SliderDefaults.colors(
+                        thumbColor = Coral,
+                        activeTrackColor = Coral,
+                        inactiveTrackColor = Color(0xFF1E293B)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Coral Slider
-            Slider(
-                value = radiusValue,
-                onValueChange = { radiusValue = it },
-                valueRange = 100f..1000f,
-                colors = SliderDefaults.colors(
-                    thumbColor = Coral,
-                    activeTrackColor = Coral,
-                    inactiveTrackColor = Color(0xFF1E293B)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
 
             // Bottom compose actions
             Column(
