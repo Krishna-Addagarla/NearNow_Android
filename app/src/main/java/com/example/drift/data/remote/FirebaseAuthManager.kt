@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 object FirebaseAuthManager {
     private const val TAG = "FirebaseAuthManager"
-    private const val BACKEND_URL = "http://127.0.0.1:8000/auth/firebase/verify"
+    private const val BACKEND_URL = "https://nearnowbackend-production.up.railway.app/auth/firebase/verify"
     
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
