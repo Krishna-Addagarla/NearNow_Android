@@ -18,20 +18,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.nearnow.ui.screens.discovery.DiscoveryBottomBar
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.data.local.model.DiscoveryUser
+import com.example.nearnow.ui.components.*
+import com.example.nearnow.ui.theme.*
 
 @Composable
 fun ProfileScreen(
@@ -46,15 +43,28 @@ fun ProfileScreen(
     // Premium gold-themed gradient for avatar border & badges
     val goldGradient = Brush.linearGradient(
         colors = listOf(
-            Color(0xFFFFD700), // Gold
-            Color(0xFFFFA500)  // Orange Gold
+            Mango,
+            MangoLight
         )
     )
+
+    // Dummy user for rendering avatar
+    val dummyUser = remember {
+        DiscoveryUser(
+            id = "me",
+            name = "Krish",
+            age = 24,
+            distanceMeters = 0,
+            bio = "Android dev & UI enthusiast. Love discovering fresh coffee shops.",
+            hasActiveStory = false,
+            initials = "KR"
+        )
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Ink)
+            .background(Cream)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -74,24 +84,12 @@ fun ProfileScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Profile Avatar Circle with Premium gold ring
-                    Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape)
-                            .background(goldGradient)
-                            .padding(3.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF1E293B)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "KR",
-                            color = Paper,
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 36.sp
-                        )
-                    }
+                    NearNowAvatar(
+                        user = dummyUser,
+                        size = AvatarSize.XLARGE,
+                        showStoryRing = true, // Premium pulse ring
+                        modifier = Modifier.shadow(4.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -102,15 +100,14 @@ fun ProfileScreen(
                     ) {
                         Text(
                             text = "Krish",
-                            color = Paper,
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "24",
-                            color = Slate,
-                            fontSize = 24.sp,
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -120,17 +117,15 @@ fun ProfileScreen(
                     // Premium Badge Status
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(20.dp))
                             .background(goldGradient)
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = "NEARNOW PLUS MEMBER",
-                            color = Ink,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.sp
+                            color = TextPrimary, // As per contrast rule
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -139,34 +134,35 @@ fun ProfileScreen(
                     // Bio Box
                     Text(
                         text = "Android dev & UI enthusiast. Love discovering fresh coffee shops, minimal design systems, and chill house beats.",
-                        color = Slate,
-                        fontSize = 14.sp,
-                        lineHeight = 20.sp,
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        lineHeight = 20.sp
                     )
                 }
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // Quick Statistics Row
+                // Quick Statistics Row (NearNowCard style)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     val stats = listOf(
                         Triple("12", "Sent", Coral),
-                        Triple("154", "Scans", Signal),
-                        Triple("4", "Chats", Color(0xFF00E6A8))
+                        Triple("154", "Scans", Mango),
+                        Triple("4", "Chats", Teal)
                     )
 
                     stats.forEach { (count, label, color) ->
                         Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF121A2B))
-                                .border(0.5.dp, Color(0xFF1E2438), RoundedCornerShape(12.dp))
+                                .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(CardWhite)
+                                .border(1.dp, SoftGray, RoundedCornerShape(16.dp))
                                 .padding(vertical = 14.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -175,16 +171,14 @@ fun ProfileScreen(
                                 color = color,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
+                                fontFamily = PoppinsFamily
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = label.uppercase(),
-                                color = Slate.copy(alpha = 0.8f),
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -195,22 +189,24 @@ fun ProfileScreen(
                 // Settings & Configuration Section
                 Text(
                     text = "DISCOVERY SETTINGS",
-                    color = Slate,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp
+                    color = TextMuted,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Radius Adjustment Card
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF121A2B)),
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(CardWhite)
+                        .border(1.dp, SoftGray, RoundedCornerShape(20.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -218,15 +214,15 @@ fun ProfileScreen(
                         ) {
                             Text(
                                 text = "Discovery Radius",
-                                color = Paper,
-                                fontSize = 15.sp,
+                                color = TextPrimary,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "${radiusValue.toInt()}m",
-                                color = Signal,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
+                                color = Mango,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -235,9 +231,9 @@ fun ProfileScreen(
                             onValueChange = { radiusValue = it },
                             valueRange = 100f..50000f,
                             colors = SliderDefaults.colors(
-                                thumbColor = Signal,
-                                activeTrackColor = Signal,
-                                inactiveTrackColor = Color(0xFF1E293B)
+                                thumbColor = Mango,
+                                activeTrackColor = Mango,
+                                inactiveTrackColor = SoftGray
                             )
                         )
                     }
@@ -246,39 +242,41 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Invisible Mode Toggle Card
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF121A2B)),
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(CardWhite)
+                        .border(1.dp, SoftGray, RoundedCornerShape(20.dp))
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Ghost Mode",
-                                color = Paper,
-                                fontSize = 15.sp,
+                                color = TextPrimary,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "Go invisible on the live map",
-                                color = Slate,
-                                fontSize = 12.sp
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                         Switch(
                             checked = isInvisibleMode,
                             onCheckedChange = { isInvisibleMode = it },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Paper,
-                                checkedTrackColor = Signal,
-                                uncheckedThumbColor = Slate,
-                                uncheckedTrackColor = Color(0xFF1E293B)
+                                checkedThumbColor = CardWhite,
+                                checkedTrackColor = Mango,
+                                uncheckedThumbColor = TextMuted,
+                                uncheckedTrackColor = SoftGray
                             )
                         )
                     }
@@ -289,11 +287,9 @@ fun ProfileScreen(
                 // Standard Setting Items List
                 Text(
                     text = "ACCOUNT",
-                    color = Slate,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp
+                    color = TextMuted,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -301,8 +297,10 @@ fun ProfileScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF121A2B))
+                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(CardWhite)
+                        .border(1.dp, SoftGray, RoundedCornerShape(20.dp))
                 ) {
                     val menuItems = listOf(
                         Pair(Icons.Default.Settings, "Account Settings"),
@@ -318,13 +316,13 @@ fun ProfileScreen(
                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(imageVector = icon, contentDescription = label, tint = Slate, modifier = Modifier.size(20.dp))
+                            Icon(imageVector = icon, contentDescription = label, tint = TextSecondary, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(14.dp))
-                            Text(text = label, color = Paper, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Slate)
+                            Text(text = label, color = TextPrimary, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = null, tint = TextSecondary)
                         }
                         if (index < menuItems.lastIndex) {
-                            HorizontalDivider(color = Color(0xFF1A2438), thickness = 0.5.dp)
+                            HorizontalDivider(color = SoftGray, thickness = 1.dp)
                         }
                     }
                 }
@@ -332,25 +330,12 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 // Sign Out Primary CTA
-                Button(
+                NearNowGhostButton(
+                    text = "LOG OUT",
                     onClick = onLogoutClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E293B),
-                        contentColor = Coral
-                    )
-                ) {
-                    Text(
-                        text = "LOG OUT",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 14.sp
-                    )
-                }
+                    textColor = Coral,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -360,7 +345,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                DiscoveryBottomBar(
+                NearNowBottomNav(
                     selectedTab = "Me",
                     onTabClick = onTabSelect
                 )

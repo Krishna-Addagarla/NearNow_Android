@@ -13,12 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,10 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nearnow.ui.animations.bounceClick
+import com.example.nearnow.ui.theme.*
 
 /* ---------------------------------------------------------------
    STEP 2 / 4 — "Show, don't tell"
@@ -43,8 +44,6 @@ fun ProfilePhotosScreen(
     onContinueClick: (filledSlots: List<Boolean>) -> Unit = {},
     onLaterClick: () -> Unit = {}
 ) {
-    // Local fake state: which of the 6 slots have a photo.
-    // Slot 0 (the cover slot) starts filled, like the screenshot.
     var slots by remember { mutableStateOf(listOf(true, false, false, false, false, false)) }
 
     ProfileSetupStepShell(
@@ -62,20 +61,17 @@ fun ProfilePhotosScreen(
             PhotoSlotGrid(
                 slots = slots,
                 onSlotClick = { index ->
-                    // Toggle fill state for demo purposes — wire to real
-                    // image picker in production.
                     slots = slots.toMutableList().also { it[index] = !it[index] }
                 }
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "← MORE NAPKINS WITH A PHOTO",
-                color = NearNowColors.Slate,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                letterSpacing = 0.5.sp
+                color = TextSecondary,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -113,34 +109,33 @@ private fun PhotoSlot(
     Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(
-                if (isFilled) NearNowColors.Signal.copy(alpha = 0.85f)
-                else NearNowColors.FieldFill
+                if (isFilled) MangoLight.copy(alpha = 0.3f)
+                else FieldFill
             )
             .border(
-                width = 1.dp,
-                color = if (isFilled) Color.Transparent else NearNowColors.Slate.copy(alpha = 0.25f),
-                shape = RoundedCornerShape(10.dp)
+                width = 1.5.dp,
+                color = if (isFilled) Mango else SoftGray,
+                shape = RoundedCornerShape(16.dp)
             )
-            .clickable { onClick() },
+            .bounceClick { onClick() },
         contentAlignment = Alignment.Center
     ) {
         if (isFilled) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "%02d".format(index + 1),
-                    color = NearNowColors.Ink,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
                 )
                 if (isCoverSlot) {
                     Icon(
                         imageVector = Icons.Filled.Star,
                         contentDescription = "Cover photo",
-                        tint = NearNowColors.Ink,
-                        modifier = Modifier.height(12.dp)
+                        tint = MangoDeep,
+                        modifier = Modifier.height(14.dp)
                     )
                 }
             }
@@ -148,7 +143,7 @@ private fun PhotoSlot(
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = "Add photo",
-                tint = NearNowColors.Slate.copy(alpha = 0.6f)
+                tint = TextMuted
             )
         }
     }
@@ -156,7 +151,7 @@ private fun PhotoSlot(
 
 @Preview(showBackground = true)
 @Composable
-fun ProfilePhotosScreenPreview(){
+fun ProfilePhotosScreenPreview() {
     ProfilePhotosScreen(
         onContinueClick = {},
         onLaterClick = {}

@@ -1,5 +1,7 @@
 package com.example.nearnow.ui.screens.discovery
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,30 +10,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.DiscoveryUser
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.ui.components.*
+import com.example.nearnow.ui.theme.*
 
 @Composable
 fun DiscoveryListScreen(
@@ -47,7 +43,7 @@ fun DiscoveryListScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Ink)
+            .background(Cream)
     ) {
         Column(
             modifier = Modifier
@@ -67,40 +63,38 @@ fun DiscoveryListScreen(
             ) {
                 Text(
                     text = "Nearby",
-                    color = Paper,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
-                // Map View Toggle Button (Square Outline/Background)
+                // Map View Toggle Button
                 IconButton(
                     onClick = onToggleView,
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF1E293B))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                        .shadow(2.dp, RoundedCornerShape(12.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CardWhite)
+                        .border(1.5.dp, SoftGray, RoundedCornerShape(12.dp))
                 ) {
-                    // Simulated Map Screen Icon using simple text/shapes
                     Box(
                         modifier = Modifier
                             .size(20.dp)
-                            .border(1.5.dp, Signal, RoundedCornerShape(2.dp))
+                            .border(2.dp, Mango, RoundedCornerShape(4.dp))
                     ) {
-                        // Horizontal/vertical line segments to represent a map crosshair/split
                         Spacer(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(1.5.dp)
-                                .background(Signal)
+                                .height(2.dp)
+                                .background(Mango)
                                 .align(Alignment.Center)
                         )
                         Spacer(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .width(1.5.dp)
-                                .background(Signal)
+                                .width(2.dp)
+                                .background(Mango)
                                 .align(Alignment.Center)
                         )
                     }
@@ -112,30 +106,54 @@ fun DiscoveryListScreen(
             // Sub-header: Count and Radius Info
             Text(
                 text = "${sortedUsers.size} NEARBY · SORTED BY DISTANCE",
-                color = Slate,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 1.5.sp,
+                color = TextSecondary,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // LazyColumn containing nearby scannable user rows
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(sortedUsers) { user ->
-                    UserListRow(
-                        user = user,
-                        onClick = { onUserClick(user) }
+            // LazyColumn containing nearby user rows with entry animations
+            if (sortedUsers.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    NearNowEmptyState(
+                        emojiSymbol = "🗺️",
+                        title = "No users nearby",
+                        subtitle = "Try expanding your discovery radius in settings."
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    items(sortedUsers) { user ->
+                        var visible by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            visible = true
+                        }
+                        
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = fadeIn(animationSpec = tween(300)) + slideInVertically(initialOffsetY = { 20 }),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            UserListRow(
+                                user = user,
+                                onClick = { onUserClick(user) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -146,7 +164,7 @@ fun DiscoveryListScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
-            DiscoveryBottomBar(
+            NearNowBottomNav(
                 selectedTab = selectedTab,
                 onTabClick = onTabSelect
             )
@@ -162,177 +180,77 @@ fun UserListRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF121A2B))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+            .clip(RoundedCornerShape(20.dp))
+            .background(CardWhite)
+            .border(1.dp, SoftGray, RoundedCornerShape(20.dp))
             .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Initials avatar circle
-        val baseColor = Color(user.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt())
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(baseColor.copy(alpha = 0.2f))
-                .border(2.dp, baseColor, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = user.initials,
-                color = baseColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+        // Redesigned avatar component
+        NearNowAvatar(
+            user = user,
+            size = AvatarSize.MEDIUM,
+            showOnlineIndicator = user.isOnline,
+            showStoryRing = user.hasActiveStory,
+            showVerifiedBadge = user.isVerified
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Middle text metadata: Name/Age, Bio, and Tags
+        // Middle details
         Column(
             modifier = Modifier.weight(1f)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
                     text = "${user.name}, ${user.age}",
-                    color = Paper,
-                    fontSize = 16.sp,
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
 
-                // Conditional tags
-                if (user.hasActiveStory) {
-                    Box(
-                        modifier = Modifier
-                            .background(Signal.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
-                            .border(0.5.dp, Signal, RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "STORY",
-                            color = Signal,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-                }
-
-                if (user.hasInvite) {
-                    Box(
-                        modifier = Modifier
-                            .background(Coral.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
-                            .border(0.5.dp, Coral, RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "INVITE",
-                            color = Coral,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
+                if (user.isVerified) {
+                    VerifiedBadge()
                 }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Bio description preview (trimmed)
-            val bioPreview = if (user.bio.length > 28) "${user.bio.take(25)}..." else user.bio
+            // Bio description preview
+            val bioPreview = if (user.bio.length > 35) "${user.bio.take(32)}..." else user.bio
             Text(
                 text = bioPreview,
-                color = Slate,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Normal
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // User Tags Row
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (user.hasActiveStory) {
+                    NearNowActiveChip(label = "STORY")
+                }
+                if (user.hasInvite) {
+                    NearNowCoralChip(label = "INVITE")
+                }
+            }
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Distance on right in mono font
-        Text(
-            text = "${user.distanceMeters}M",
-            color = Slate,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-/**
- * Shared Discovery Bottom Bar containing 4 tabs: Nearby, Invites, Chats, Me.
- */
-@Composable
-fun DiscoveryBottomBar(
-    selectedTab: String,
-    onTabClick: (String) -> Unit
-) {
-    val tabs = listOf("Nearby", "Invites", "Chats", "Me")
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF070B14))
-            .border(width = 0.5.dp, color = Color(0xFF1A2438))
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .height(72.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        tabs.forEach { tab ->
-            val isSelected = tab == selectedTab
-            val icon = when (tab) {
-                "Nearby" -> Icons.Default.LocationOn
-                "Invites" -> Icons.Default.Send
-                "Chats" -> Icons.Default.MailOutline
-                else -> Icons.Default.Person
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onTabClick(tab) }
-                    .padding(vertical = 4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Circular active indicator dot or highlight
-                if (isSelected) {
-                    Box(
-                        modifier = Modifier
-                            .size(4.dp)
-                            .background(Signal, CircleShape)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                } else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                Icon(
-                    imageVector = icon,
-                    contentDescription = tab,
-                    tint = if (isSelected) Signal else Slate.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = tab,
-                    color = if (isSelected) Signal else Slate.copy(alpha = 0.7f),
-                    fontSize = 11.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                )
-            }
-        }
+        // Distance Badge
+        NearNowTealChip(label = "${user.distanceMeters}M")
     }
 }
 

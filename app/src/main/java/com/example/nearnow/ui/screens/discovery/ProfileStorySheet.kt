@@ -9,24 +9,27 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,11 +37,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.DiscoveryUser
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.ui.components.*
+import com.example.nearnow.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
@@ -50,238 +50,236 @@ fun ProfileStorySheet(
 ) {
     var showStoryPlayer by remember { mutableStateOf(false) }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.85f)
-            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(Ink)
-            .border(
-                width = 1.dp,
-                color = Color(0xFF1E293B),
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-            )
+            .background(CardWhite)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Handle / Notch at top
+        // Header: Back/Dismiss button on left, Report flag on right
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .size(40.dp)
+                    .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
+                    .clip(CircleShape)
+                    .background(CardWhite)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Dismiss",
+                    tint = TextPrimary
+                )
+            }
+
+            // Custom Report Flag Icon (using Canvas to avoid missing icons)
             Box(
                 modifier = Modifier
-                    .size(width = 36.dp, height = 4.dp)
-                    .background(Color(0xFF334155), CircleShape)
-                    .align(Alignment.CenterHorizontally)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Header: Back/Dismiss button on left, Report flag on right
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .size(40.dp)
+                    .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
+                    .clip(CircleShape)
+                    .background(CardWhite)
+                    .clickable { /* Report logic */ },
+                contentAlignment = Alignment.Center
             ) {
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1E293B))
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Dismiss",
-                        tint = Paper
+                Canvas(modifier = Modifier.size(18.dp)) {
+                    val path = Path().apply {
+                        moveTo(2f, 2f)
+                        lineTo(14f, 2f)
+                        lineTo(12f, 7f)
+                        lineTo(16f, 7f)
+                        lineTo(4f, 16f)
+                        lineTo(4f, 2f)
+                        close()
+                    }
+                    drawPath(
+                        path = path,
+                        color = Coral
+                    )
+                    drawRect(
+                        color = TextSecondary,
+                        topLeft = androidx.compose.ui.geometry.Offset(2f, 2f),
+                        size = androidx.compose.ui.geometry.Size(2f, size.height - 2f)
                     )
                 }
+            }
+        }
 
-                // Custom Report Flag Icon (using Canvas to avoid missing icons)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Profile Images Swipeable Gallery
+        val pagesCount = if (user.photoUrls.isEmpty()) 1 else user.photoUrls.size
+        val pagerState = rememberPagerState(pageCount = { pagesCount })
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
+                .padding(horizontal = 24.dp)
+                .clip(RoundedCornerShape(24.dp))
+                .background(Cream),
+            contentAlignment = Alignment.Center
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { pageIndex ->
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1E293B))
-                        .clickable { /* Report logic */ },
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Canvas(modifier = Modifier.size(18.dp)) {
-                        val path = Path().apply {
-                            moveTo(2f, 2f)
-                            lineTo(14f, 2f)
-                            lineTo(12f, 7f)
-                            lineTo(16f, 7f)
-                            lineTo(4f, 16f)
-                            lineTo(4f, 2f)
-                            close()
-                        }
-                        drawPath(
-                            path = path,
-                            color = Coral
-                        )
-                        // Flag pole
-                        drawRect(
-                            color = Slate,
-                            topLeft = androidx.compose.ui.geometry.Offset(2f, 2f),
-                            size = androidx.compose.ui.geometry.Size(2f, size.height - 2f)
+                    NearNowAvatar(
+                        user = user,
+                        size = AvatarSize.XLARGE,
+                        showOnlineIndicator = user.isOnline,
+                        showStoryRing = user.hasActiveStory,
+                        showVerifiedBadge = user.isVerified
+                    )
+                }
+            }
+
+            // Smooth pager indicators
+            if (pagesCount > 1) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    repeat(pagesCount) { i ->
+                        val isActive = pagerState.currentPage == i
+                        Box(
+                            modifier = Modifier
+                                .size(if (isActive) 12.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(if (isActive) Mango else SoftGray)
                         )
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-            // User Profile Header: Name & Age (Serif style)
-            Text(
-                text = "${user.name}, ${user.age}",
-                color = Paper,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Row with verified status and mono distance
+        Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+            // User Details Row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // VERIFIED badge
-                Box(
-                    modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = Signal.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "VERIFIED",
-                        color = Signal,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.sp
-                    )
-                }
-
-                // Mono Distance
                 Text(
-                    text = "${user.distanceMeters}M",
-                    color = Signal,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp,
+                    text = "${user.name}, ${user.age}",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold
                 )
+
+                if (user.isVerified) {
+                    VerifiedBadge()
+                }
+
+                if (user.isOnline) {
+                    OnlineBadge()
+                }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Verified Badge & Distance Badge
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                NearNowTealChip(label = "${user.distanceMeters}M")
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Active Story Row (only appears if active story is present)
             if (user.hasActiveStory) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF131D30))
-                        .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
+                        .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Cream)
+                        .border(1.dp, SoftGray, RoundedCornerShape(16.dp))
                         .clickable { showStoryPlayer = true }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Story Thumbnail with Signal Green Glowing ring
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .border(2.dp, Signal, CircleShape)
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .background(Color(user.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt())),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = user.initials,
-                            color = Paper,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    // Small thumbnail avatar
+                    NearNowAvatar(
+                        user = user,
+                        size = AvatarSize.SMALL,
+                        showStoryRing = true
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Column {
                         Text(
                             text = "Active story - ${user.storyTimeAgo ?: "Just now"}",
-                            color = Paper,
-                            fontSize = 14.sp,
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             // Bio / Description block
             Text(
                 text = "\"${user.bio}\"",
-                color = Paper,
-                fontSize = 16.sp,
-                fontStyle = FontStyle.Normal,
+                color = TextPrimary,
+                style = MaterialTheme.typography.bodyLarge,
                 lineHeight = 22.sp,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Interest Chips
+            if (user.interests.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(user.interests) { interest ->
+                        NearNowChip(label = interest)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Bottom Buttons
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(
-                    onClick = { onSendMessage(user.name) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Signal,
-                        contentColor = Ink
-                    )
-                ) {
-                    Text(
-                        text = "SEND A MESSAGE",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
-                    )
-                }
+            NearNowPrimaryButton(
+                text = "SEND A MESSAGE",
+                onClick = { onSendMessage(user.name) },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                Text(
-                    text = "PASS",
-                    color = Slate,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp,
-                    fontSize = 15.sp,
-                    modifier = Modifier
-                        .clickable { onPass() }
-                        .padding(vertical = 8.dp)
-                )
+            NearNowGhostButton(
+                text = "PASS",
+                onClick = onPass,
+                textColor = TextSecondary,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // Custom Overlay Story Player
@@ -300,6 +298,7 @@ fun ProfileStorySheet(
 
 /**
  * A simulation of a Snapchat-style fullscreen story player.
+ * Supports: Tap left/right navigation, swipe down to dismiss, smooth progress animations.
  */
 @Composable
 fun StoryPlayerOverlay(
@@ -307,6 +306,7 @@ fun StoryPlayerOverlay(
     onClose: () -> Unit
 ) {
     var progress by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
 
     // Increment progress bar to simulate story playing
     LaunchedEffect(Unit) {
@@ -320,10 +320,27 @@ fun StoryPlayerOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
-            .clickable { onClose() } // Tap to dismiss
+            .background(Color.Black.copy(alpha = (1f - (offsetY / 1000f).coerceIn(0f, 0.8f))))
+            .offset(y = offsetY.dp)
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        if (dragAmount.y > 0) {
+                            offsetY += dragAmount.y
+                        }
+                    },
+                    onDragEnd = {
+                        if (offsetY > 150) {
+                            onClose()
+                        } else {
+                            offsetY = 0f
+                        }
+                    }
+                )
+            }
     ) {
-        // Story Background (vibrant gradient representation of user's story content)
+        // Story Background
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -331,18 +348,30 @@ fun StoryPlayerOverlay(
                     Brush.verticalGradient(
                         colors = listOf(
                             Color(0xFF1A1C29),
-                            Color(user.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt()).copy(alpha = 0.5f),
+                            Color(user.avatarColorHex.removePrefix("#").toLongOrNull(16)?.let { it or 0xFF000000L } ?: 0xFF8B96A8L).copy(alpha = 0.5f),
                             Color(0xFF0F172A)
                         )
                     )
-                ),
-            contentAlignment = Alignment.Center
+                )
+                // Tap gestures for left/right navigation
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        val screenWidth = size.width
+                        if (offset.x < screenWidth * 0.3f) {
+                            // Tap left: Restart / Previous
+                            progress = 0f
+                        } else {
+                            // Tap right: Skip / Close
+                            onClose()
+                        }
+                    }
+                }
         ) {
             // Simulated story content card
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.padding(24.dp).align(Alignment.Center)
             ) {
                 Text(
                     text = "⚡",
@@ -351,8 +380,8 @@ fun StoryPlayerOverlay(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "MY DAY",
-                    color = Signal,
-                    fontFamily = FontFamily.Monospace,
+                    color = Mango,
+                    fontFamily = PoppinsFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     letterSpacing = 2.sp
@@ -360,9 +389,9 @@ fun StoryPlayerOverlay(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = user.bio,
-                    color = Paper,
+                    color = CardWhite,
                     fontSize = 18.sp,
-                    fontFamily = FontFamily.Serif,
+                    fontFamily = PoppinsFamily,
                     textAlign = TextAlign.Center,
                     lineHeight = 26.sp
                 )
@@ -386,7 +415,7 @@ fun StoryPlayerOverlay(
                     modifier = Modifier
                         .fillMaxHeight()
                         .fillMaxWidth(progress)
-                        .background(Signal, CircleShape)
+                        .background(Mango, CircleShape)
                 )
             }
 
@@ -397,26 +426,17 @@ fun StoryPlayerOverlay(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color(user.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt())),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = user.initials,
-                        color = Paper,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                NearNowAvatar(
+                    user = user,
+                    size = AvatarSize.SMALL
+                )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
                     text = user.name,
-                    color = Paper,
+                    color = CardWhite,
+                    fontFamily = PoppinsFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
@@ -425,7 +445,8 @@ fun StoryPlayerOverlay(
 
                 Text(
                     text = user.storyTimeAgo ?: "",
-                    color = Slate,
+                    color = SoftGray,
+                    fontFamily = PoppinsFamily,
                     fontSize = 12.sp
                 )
 
@@ -435,7 +456,7 @@ fun StoryPlayerOverlay(
                 IconButton(onClick = onClose) {
                     Text(
                         text = "✕",
-                        color = Paper,
+                        color = CardWhite,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )

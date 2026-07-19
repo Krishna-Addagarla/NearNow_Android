@@ -8,28 +8,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.PremiumTier
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.ui.components.NearNowPrimaryButton
+import com.example.nearnow.ui.theme.*
 
 @Composable
 fun PaywallScreen(
@@ -39,12 +33,12 @@ fun PaywallScreen(
 ) {
     var selectedTier by remember { mutableStateOf(tiers.firstOrNull { it.isRecommended } ?: tiers.first()) }
 
-    // Premium deep forest green gradient background
+    // Premium light warm gradient background
     val premiumGradient = Brush.verticalGradient(
         colors = listOf(
-            Ink,
-            Color(0xFF0F261E), // Deep Emerald Forest Green
-            Color(0xFF071410)
+            Cream,
+            MangoLight.copy(alpha = 0.15f),
+            Cream
         )
     )
 
@@ -68,13 +62,14 @@ fun PaywallScreen(
                     onClick = onBackClick,
                     modifier = Modifier
                         .size(40.dp)
+                        .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E293B).copy(alpha = 0.4f))
+                        .background(CardWhite)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Paper
+                        tint = TextPrimary
                     )
                 }
             }
@@ -84,23 +79,21 @@ fun PaywallScreen(
             // Sub-headline: NEARNOW PLUS
             Text(
                 text = "NEARNOW PLUS",
-                color = Signal,
-                fontFamily = FontFamily.Monospace,
+                color = MangoDeep,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
                 letterSpacing = 2.5.sp
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Serif Title
+            // Title
             Text(
                 text = "Wider range.\nDeeper signal.",
-                color = Paper,
-                fontFamily = FontFamily.Serif,
+                color = TextPrimary,
+                style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 36.sp,
-                lineHeight = 44.sp
+                lineHeight = 38.sp
             )
 
             Spacer(modifier = Modifier.height(36.dp))
@@ -122,16 +115,15 @@ fun PaywallScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Custom green bullet symbol
                         Text(
                             text = "⚡",
-                            color = Signal,
+                            color = Mango,
                             fontSize = 14.sp
                         )
                         Text(
                             text = benefit,
-                            color = Paper.copy(alpha = 0.9f),
-                            fontSize = 15.sp,
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -140,7 +132,7 @@ fun PaywallScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Pricing Selectors (Horizontal row)
+            // Pricing Tiers Selector
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -150,12 +142,18 @@ fun PaywallScreen(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) Color(0xFF0D251D) else Color(0xFF1E293B).copy(alpha = 0.4f))
+                            .shadow(
+                                elevation = if (isSelected) 6.dp else 2.dp,
+                                shape = RoundedCornerShape(20.dp),
+                                spotColor = ShadowColor,
+                                ambientColor = ShadowColor
+                            )
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(CardWhite)
                             .border(
-                                width = 1.5.dp,
-                                color = if (isSelected) Signal else Color.Transparent,
-                                shape = RoundedCornerShape(16.dp)
+                                width = if (isSelected) 2.dp else 1.dp,
+                                color = if (isSelected) Mango else SoftGray,
+                                shape = RoundedCornerShape(20.dp)
                             )
                             .clickable { selectedTier = tier }
                             .padding(vertical = 20.dp, horizontal = 12.dp),
@@ -163,10 +161,9 @@ fun PaywallScreen(
                     ) {
                         Text(
                             text = tier.name,
-                            color = if (isSelected) Signal else Slate,
-                            fontFamily = FontFamily.Monospace,
+                            color = if (isSelected) MangoDeep else TextSecondary,
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
                             letterSpacing = 1.sp
                         )
 
@@ -174,18 +171,17 @@ fun PaywallScreen(
 
                         Text(
                             text = tier.priceText,
-                            color = Paper,
-                            fontSize = 24.sp,
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Billed details to address pricing transparency UX finding
                         Text(
                             text = tier.billedDetails,
-                            color = Slate,
-                            fontSize = 11.sp,
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -194,40 +190,25 @@ fun PaywallScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Start Free Trial Button (Signal Green)
+            // Start Free Trial Button (Mango Primary)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
+                NearNowPrimaryButton(
+                    text = "START FREE TRIAL",
                     onClick = { onStartTrialClick(selectedTier) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Signal,
-                        contentColor = Ink
-                    )
-                ) {
-                    Text(
-                        text = "START FREE TRIAL",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
-                    )
-                }
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Explainer trial terms below CTA button to solve trial term clarity issue
                 Text(
                     text = "7-day free trial, cancel anytime in settings. Subscription auto-renews.",
-                    color = Slate.copy(alpha = 0.7f),
-                    fontSize = 11.sp,
+                    color = TextMuted,
+                    style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center
                 )
 

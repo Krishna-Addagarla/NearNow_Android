@@ -4,6 +4,7 @@ import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,14 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,24 +32,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.remote.FirebaseAuthManager
-
-// ---------- Color Tokens ----------
-object NearNowColors {
-    val Ink = Color(0xFF0B1220)
-    val Signal = Color(0xFF00E6A8)
-    val Coral = Color(0xFFFF6B4A)
-    val Paper = Color(0xFFF5F2EA)
-    val Slate = Color(0xFF8B96A8)
-    val FieldFill = Color(0xFF1A2536) // subtle elevated surface for inputs
-}
+import com.example.nearnow.ui.components.NearNowPrimaryButton
+import com.example.nearnow.ui.theme.*
 
 @Composable
 fun PhoneNumberScreen(
@@ -66,7 +58,7 @@ fun PhoneNumberScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(NearNowColors.Ink)
+            .background(Cream)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -83,11 +75,9 @@ fun PhoneNumberScreen(
                 // Eyebrow label: "IDENTITY · 01"
                 Text(
                     text = "IDENTITY · 01",
-                    color = NearNowColors.Signal,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Medium
+                    color = Mango,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -95,11 +85,9 @@ fun PhoneNumberScreen(
                 // Headline
                 Text(
                     text = "What's your\nnumber?",
-                    color = NearNowColors.Paper,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 34.sp,
-                    lineHeight = 40.sp
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.displayMedium,
+                    lineHeight = 38.sp
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -107,8 +95,8 @@ fun PhoneNumberScreen(
                 // Subtitle
                 Text(
                     text = "No password. No email. Just a code.",
-                    color = NearNowColors.Slate,
-                    fontSize = 15.sp,
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodyLarge,
                     lineHeight = 22.sp
                 )
 
@@ -117,12 +105,12 @@ fun PhoneNumberScreen(
                 // Country code + phone number row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     CountryCodeField(
                         value = countryCode,
                         onValueChange = { countryCode = it },
-                        modifier = Modifier.width(72.dp)
+                        modifier = Modifier.width(76.dp)
                     )
 
                     PhoneNumberField(
@@ -132,13 +120,13 @@ fun PhoneNumberScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Info text
                 Text(
                     text = "Standard SMS rates may apply",
-                    color = NearNowColors.Slate.copy(alpha = 0.7f),
-                    fontSize = 12.sp
+                    color = TextMuted,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -147,13 +135,14 @@ fun PhoneNumberScreen(
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
-                Button(
+                NearNowPrimaryButton(
+                    text = "SEND CODE",
                     onClick = {
                         if (phoneNumber.trim().isEmpty()) {
                             Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
-                            return@Button
+                            return@NearNowPrimaryButton
                         }
                         isLoading = true
                         val fullPhone = "$countryCode${phoneNumber.trim()}"
@@ -177,32 +166,9 @@ fun PhoneNumberScreen(
                         }
                     },
                     enabled = !isLoading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = NearNowColors.Signal,
-                        contentColor = NearNowColors.Ink,
-                        disabledContainerColor = NearNowColors.Signal.copy(alpha = 0.5f),
-                        disabledContentColor = NearNowColors.Ink.copy(alpha = 0.5f)
-                    )
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = NearNowColors.Ink,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "SEND CODE",
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 1.5.sp,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
+                    isLoading = isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -214,29 +180,30 @@ private fun CountryCodeField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
+    Box(
         modifier = modifier
             .height(56.dp)
-            .clip(RoundedCornerShape(12.dp)),
-        textStyle = androidx.compose.ui.text.TextStyle(
-            color = NearNowColors.Paper,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        ),
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = NearNowColors.FieldFill,
-            unfocusedContainerColor = NearNowColors.FieldFill,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = NearNowColors.Signal
+            .clip(RoundedCornerShape(16.dp))
+            .background(FieldFill)
+            .border(1.dp, SoftGray, RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(
+                color = TextPrimary,
+                fontFamily = PoppinsFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            cursorBrush = SolidColor(Mango),
+            modifier = Modifier.fillMaxWidth()
         )
-    )
+    }
 }
 
 @Composable
@@ -245,43 +212,46 @@ private fun PhoneNumberField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
+    Box(
         modifier = modifier
             .height(56.dp)
-            .clip(RoundedCornerShape(12.dp)),
-        placeholder = {
-            Text(
-                text = "98765 43210",
-                color = NearNowColors.Slate,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.SemiBold,
+            .clip(RoundedCornerShape(16.dp))
+            .background(FieldFill)
+            .border(1.dp, SoftGray, RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(
+                color = TextPrimary,
+                fontFamily = PoppinsFamily,
+                fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
-            )
-        },
-        textStyle = androidx.compose.ui.text.TextStyle(
-            color = NearNowColors.Paper,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp
-        ),
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = NearNowColors.FieldFill,
-            unfocusedContainerColor = NearNowColors.FieldFill,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = NearNowColors.Signal
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            cursorBrush = SolidColor(Mango),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { innerTextField ->
+                if (value.isEmpty()) {
+                    Text(
+                        text = "98765 43210",
+                        color = TextMuted,
+                        fontFamily = PoppinsFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+                innerTextField()
+            }
         )
-    )
+    }
 }
-
 
 @Preview(showBackground = true)
 @Composable
-fun PhoneNumberScreenPreview (){
-    PhoneNumberScreen(
-    )
+fun PhoneNumberScreenPreview() {
+    PhoneNumberScreen()
 }

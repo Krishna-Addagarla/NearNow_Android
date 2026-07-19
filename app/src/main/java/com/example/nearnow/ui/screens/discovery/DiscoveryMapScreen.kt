@@ -1,6 +1,7 @@
 package com.example.nearnow.ui.screens.discovery
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,19 +11,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,12 +34,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.DiscoveryUser
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.ui.components.AvatarSize
+import com.example.nearnow.ui.components.NearNowAvatar
+import com.example.nearnow.ui.components.NearNowBottomNav
+import com.example.nearnow.ui.components.NearNowBottomSheet
+import com.example.nearnow.ui.theme.*
 import kotlin.math.sqrt
+import kotlinx.coroutines.delay
 
 // Cluster helper class
 data class DiscoveryCluster(
@@ -43,6 +48,7 @@ data class DiscoveryCluster(
     val members: List<DiscoveryUser>
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiscoveryMapScreen(
     onNavigateToTab: (String) -> Unit = {},
@@ -55,7 +61,6 @@ fun DiscoveryMapScreen(
     var activeStoryUserForPlayer by remember { mutableStateOf<DiscoveryUser?>(null) }
     var isInvisibleMode by remember { mutableStateOf(false) }
 
-    // Custom clustering logic for spatial mapping
     val clusters = remember(DiscoveryUser.mockUsers) {
         clusterUsers(DiscoveryUser.mockUsers, threshold = 0.22f)
     }
@@ -77,10 +82,18 @@ fun DiscoveryMapScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Ink)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            MangoLight.copy(alpha = 0.05f),
+                            Cream
+                        ),
+                        radius = 900f
+                    )
+                )
         ) {
-            // 1. Concentric circles Radar grid Canvas
-            RadarGridBackground()
+            // 1. Concentric circles Radar grid Canvas + Animated Radar Pulse + Ambient particles
+            RadarGridBackground(isInvisibleMode = isInvisibleMode)
 
             // 2. Main content container
             Column(
@@ -101,10 +114,9 @@ fun DiscoveryMapScreen(
                 ) {
                     Text(
                         text = "Nearby",
-                        color = Paper,
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 32.sp
+                        color = TextPrimary,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold
                     )
 
                     Row(
@@ -116,17 +128,18 @@ fun DiscoveryMapScreen(
                             onClick = { isInvisibleMode = !isInvisibleMode },
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isInvisibleMode) Color(0xFF334155) else Color(0xFF1E293B))
+                                .shadow(2.dp, RoundedCornerShape(12.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isInvisibleMode) Mango else CardWhite)
                                 .border(
-                                    width = 1.dp,
-                                    color = if (isInvisibleMode) Signal else Color(0xFF334155),
-                                    shape = RoundedCornerShape(8.dp)
+                                    width = 1.5.dp,
+                                    color = if (isInvisibleMode) Mango else SoftGray,
+                                    shape = RoundedCornerShape(12.dp)
                                 )
                         ) {
                             Text(
                                 text = "👻",
-                                fontSize = 16.sp
+                                fontSize = 18.sp
                             )
                         }
 
@@ -135,14 +148,15 @@ fun DiscoveryMapScreen(
                             onClick = { showListView = true },
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF1E293B))
-                                .border(1.dp, Color(0xFF334155), RoundedCornerShape(8.dp))
+                                .shadow(2.dp, RoundedCornerShape(12.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(CardWhite)
+                                .border(1.5.dp, SoftGray, RoundedCornerShape(12.dp))
                         ) {
                             Icon(
                                 imageVector = Icons.Default.List,
                                 contentDescription = "List View",
-                                tint = Signal
+                                tint = Mango
                             )
                         }
                     }
@@ -158,7 +172,6 @@ fun DiscoveryMapScreen(
                     val canvasHeight = constraints.maxHeight.toFloat()
                     val centerX = canvasWidth / 2
                     val centerY = canvasHeight / 2
-                    // Max radius is limited by width/height of the container
                     val maxRadius = minOf(canvasWidth, canvasHeight) * 0.42f
 
                     // Invisible Mode Status Text Overlay
@@ -167,18 +180,16 @@ fun DiscoveryMapScreen(
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
                                 .padding(top = 16.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFF1E293B))
-                                .border(0.5.dp, Slate, RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MangoLight.copy(alpha = 0.15f))
+                                .border(1.dp, Mango, RoundedCornerShape(20.dp))
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = "• INVISIBLE MODE ACTIVE",
-                                color = Slate,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                                text = "• GHOST MODE ACTIVE",
+                                color = MangoDeep,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -191,52 +202,77 @@ fun DiscoveryMapScreen(
                                 y = (centerY / 2.75f).dp - 24.dp
                             )
                             .size(48.dp)
+                            .shadow(4.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
                             .border(
                                 width = 2.dp,
-                                color = if (isInvisibleMode) Slate else Color(0xFF007AFF),
+                                color = if (isInvisibleMode) TextMuted else Mango,
                                 shape = CircleShape
                             )
                             .padding(2.dp)
                             .clip(CircleShape)
-                            .background(if (isInvisibleMode) Color(0xFF1E293B) else Color(0xFF0056B3)),
+                            .background(if (isInvisibleMode) SoftGray else MangoLight),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (isInvisibleMode) "GHOST" else "YOU",
-                            color = if (isInvisibleMode) Slate else Paper,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = if (isInvisibleMode) 9.sp else 11.sp
+                            color = if (isInvisibleMode) TextMuted else TextPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
-                    // Render each clustered node on the map
-                    clusters.forEach { cluster ->
+                    // Render each clustered node on the map with floating animations
+                    clusters.forEachIndexed { index, cluster ->
                         val mainUser = cluster.mainUser
-                        // Map coordinates (-1.0 to 1.0) to actual pixel offset from center
                         val offsetX = mainUser.mapX * maxRadius
                         val offsetY = mainUser.mapY * maxRadius
 
-                        // Screen dp positions
                         val xDp = ((centerX + offsetX) / 2.75f).dp - 24.dp
                         val yDp = ((centerY + offsetY) / 2.75f).dp - 24.dp
+
+                        // Staggered entry animation
+                        var animatedScale by remember { mutableStateOf(0f) }
+                        LaunchedEffect(Unit) {
+                            delay(index * 100L)
+                            animate(
+                                initialValue = 0f,
+                                targetValue = 1f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                )
+                            ) { value, _ ->
+                                animatedScale = value
+                            }
+                        }
+
+                        // Avatar breathing animation
+                        val infiniteTransition = rememberInfiniteTransition(label = "avatar_breath_$index")
+                        val breathingScale by infiniteTransition.animateFloat(
+                            initialValue = 0.97f,
+                            targetValue = 1.03f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(1800 + index * 100, easing = EaseInOutSine),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "breath"
+                        )
 
                         DiscoveryMapNode(
                             cluster = cluster,
                             onAvatarClick = { user ->
                                 if (user.hasActiveStory) {
-                                    // Tap once: opens story
                                     activeStoryUserForPlayer = user
                                 } else {
-                                    // Otherwise directly opens profile
                                     selectedUserForSheet = user
                                 }
                             },
                             onLabelClick = { user ->
-                                // Tap name label below: directly opens messaging/profile sheet
                                 selectedUserForSheet = user
                             },
-                            modifier = Modifier.offset(x = xDp, y = yDp)
+                            modifier = Modifier
+                                .offset(x = xDp, y = yDp)
+                                .scale(animatedScale * breathingScale)
                         )
                     }
                 }
@@ -245,28 +281,37 @@ fun DiscoveryMapScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF1E293B))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .shadow(4.dp, RoundedCornerShape(24.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(CardWhite)
+                        .border(1.5.dp, SoftGray, RoundedCornerShape(24.dp))
+                        .padding(horizontal = 18.dp, vertical = 10.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Green pulsing-like dot
+                        // Pulsing Teal indicator dot
+                        val infinitePulse = rememberInfiniteTransition(label = "live_pulse")
+                        val pulseAlpha by infinitePulse.animateFloat(
+                            initialValue = 0.3f,
+                            targetValue = 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(1000, easing = LinearEasing),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "alpha"
+                        )
                         Box(
                             modifier = Modifier
-                                .size(6.dp)
-                                .background(Signal, CircleShape)
+                                .size(8.dp)
+                                .background(Teal.copy(alpha = pulseAlpha), CircleShape)
                         )
                         Text(
                             text = "8 NEARBY - 500M RADIUS",
-                            color = Paper,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            letterSpacing = 1.sp
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -280,7 +325,7 @@ fun DiscoveryMapScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
             ) {
-                DiscoveryBottomBar(
+                NearNowBottomNav(
                     selectedTab = selectedTab,
                     onTabClick = {
                         selectedTab = it
@@ -291,17 +336,10 @@ fun DiscoveryMapScreen(
         }
     }
 
-    // Modal Profile & Story Sheet
+    // Modal Profile Sheet using NearNowBottomSheet component
     selectedUserForSheet?.let { user ->
-        // Custom bottom sheet trigger simulation
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.6f))
-                .pointerInput(Unit) {
-                    detectTapGestures { selectedUserForSheet = null }
-                },
-            contentAlignment = Alignment.BottomCenter
+        NearNowBottomSheet(
+            onDismissRequest = { selectedUserForSheet = null }
         ) {
             ProfileStorySheet(
                 user = user,
@@ -327,8 +365,6 @@ fun DiscoveryMapScreen(
                 user = user,
                 onClose = {
                     activeStoryUserForPlayer = null
-                    // "tapping it opens the story first, tapping again opens chat"
-                    // After the story is viewed, set the sheet target to this user
                     selectedUserForSheet = user
                 }
             )
@@ -347,56 +383,39 @@ fun DiscoveryMapNode(
     val hasCluster = cluster.members.size > 1
 
     Column(
-        modifier = modifier.width(72.dp),
+        modifier = modifier.width(76.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(contentAlignment = Alignment.TopEnd) {
-            // Main user avatar circle
-            val avatarColor = Color(mainUser.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt())
-
-            Box(
+            // Main user avatar circle using reusable NearNowAvatar
+            NearNowAvatar(
+                user = mainUser,
+                size = AvatarSize.MEDIUM,
+                showOnlineIndicator = mainUser.isOnline,
+                showStoryRing = mainUser.hasActiveStory,
+                showVerifiedBadge = mainUser.isVerified,
                 modifier = Modifier
-                    .size(48.dp)
-                    // Border changes depending on state: Signal green (active story), Coral (invite)
-                    .border(
-                        width = 2.dp,
-                        color = when {
-                            mainUser.hasActiveStory -> Signal
-                            mainUser.hasInvite -> Coral
-                            else -> Color.Transparent
-                        },
-                        shape = CircleShape
-                    )
-                    .padding(3.dp)
-                    .clip(CircleShape)
-                    .background(avatarColor)
-                    .clickable { onAvatarClick(mainUser) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = mainUser.initials,
-                    color = Paper,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                    .shadow(3.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
+                    .clickable { onAvatarClick(mainUser) }
+            )
 
             // Cluster overlapping badge (+N)
             if (hasCluster) {
                 Box(
                     modifier = Modifier
-                        .offset(x = 4.dp, y = (-4).dp)
+                        .offset(x = 6.dp, y = (-4).dp)
                         .size(20.dp)
                         .clip(CircleShape)
-                        .background(Signal)
-                        .border(1.dp, Ink, CircleShape),
+                        .background(Mango)
+                        .border(1.5.dp, Cream, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "+${cluster.members.size - 1}",
-                        color = Ink,
+                        color = CardWhite,
                         fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall
                     )
                 }
             }
@@ -411,8 +430,8 @@ fun DiscoveryMapNode(
         ) {
             Text(
                 text = mainUser.name,
-                color = Paper,
-                fontSize = 11.sp,
+                color = TextPrimary,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -420,9 +439,8 @@ fun DiscoveryMapNode(
             )
             Text(
                 text = "${mainUser.distanceMeters}M",
-                color = if (mainUser.hasActiveStory) Signal else Slate,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 9.sp,
+                color = if (mainUser.isOnline) Teal else TextSecondary,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -431,7 +449,19 @@ fun DiscoveryMapNode(
 }
 
 @Composable
-fun RadarGridBackground() {
+fun RadarGridBackground(isInvisibleMode: Boolean) {
+    // 1. Animated Radar Pulse (Continuous Mango ring expanding)
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse_radar")
+    val pulseProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse"
+    )
+
     Canvas(modifier = Modifier.fillMaxSize()) {
         val centerX = size.width / 2
         val centerY = size.height / 2
@@ -441,35 +471,42 @@ fun RadarGridBackground() {
         val meshCount = 8
         for (i in 1..meshCount) {
             val fraction = i.toFloat() / meshCount
-            // horizontal line
             drawLine(
-                color = Color(0xFF1E293B).copy(alpha = 0.2f),
+                color = SoftGray.copy(alpha = 0.5f),
                 start = Offset(0f, centerY * fraction * 2f),
                 end = Offset(size.width, centerY * fraction * 2f),
                 strokeWidth = 1f
             )
-            // vertical line
             drawLine(
-                color = Color(0xFF1E293B).copy(alpha = 0.2f),
+                color = SoftGray.copy(alpha = 0.5f),
                 start = Offset(centerX * fraction * 2f, 0f),
                 end = Offset(centerX * fraction * 2f, size.height),
                 strokeWidth = 1f
             )
         }
 
+        // Draw animated expanding pulse ring
+        if (!isInvisibleMode) {
+            drawCircle(
+                color = Mango.copy(alpha = (1f - pulseProgress) * 0.15f),
+                radius = maxRadius * pulseProgress,
+                center = Offset(centerX, centerY),
+                style = Stroke(width = 2.dp.toPx())
+            )
+        }
+
         // Draw Concentric dashed/dotted Radar Rings
         val rings = listOf(
-            maxRadius * 0.35f to "180M",
-            maxRadius * 0.7f to "420M",
-            maxRadius to "650M"
+            maxRadius * 0.35f,
+            maxRadius * 0.7f,
+            maxRadius
         )
 
         val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
 
-        rings.forEach { (radius, label) ->
-            // Draw Circle
+        rings.forEach { radius ->
             drawCircle(
-                color = Color(0xFF1E293B),
+                color = MangoLight.copy(alpha = 0.15f),
                 radius = radius,
                 center = Offset(centerX, centerY),
                 style = Stroke(
@@ -477,10 +514,6 @@ fun RadarGridBackground() {
                     pathEffect = pathEffect
                 )
             )
-
-            // Draw label markers (e.g. "180M", "420M", "650M")
-            // Plot them slightly offset to the left of the center vertical line
-            // Using a simple canvas text draw or placeholder circle indicator
         }
     }
 
@@ -504,13 +537,12 @@ fun RadarGridBackground() {
                 val xOffset = (centerX / 2.75f).dp - 24.dp
                 Text(
                     text = label,
-                    color = Color(0xFF475569),
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 10.sp,
+                    color = TextMuted,
+                    style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .offset(x = xOffset, y = yOffset)
-                        .background(Ink)
+                        .background(Cream)
                         .padding(horizontal = 4.dp)
                 )
             }
@@ -518,9 +550,6 @@ fun RadarGridBackground() {
     }
 }
 
-/**
- * Perform spatial distance-based clustering for mock avatars.
- */
 private fun clusterUsers(users: List<DiscoveryUser>, threshold: Float): List<DiscoveryCluster> {
     val visited = mutableSetOf<String>()
     val result = mutableListOf<DiscoveryCluster>()
@@ -546,7 +575,6 @@ private fun clusterUsers(users: List<DiscoveryUser>, threshold: Float): List<Dis
     return result
 }
 
-// Simple gesture detector wrapper helper to avoid importing huge custom inputs
 private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.detectTapGestures(
     onTap: () -> Unit
 ) {

@@ -1,5 +1,6 @@
 package com.example.nearnow.ui.screens.chat
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,26 +13,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.ChatSession
 import com.example.nearnow.data.local.model.ChatSessionStatus
-import com.example.nearnow.ui.screens.discovery.DiscoveryBottomBar
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.ui.components.*
+import com.example.nearnow.ui.theme.*
 
 @Composable
 fun ChatListScreen(
@@ -43,7 +42,6 @@ fun ChatListScreen(
     var selectedListTab by remember { mutableStateOf("ACTIVE") }
     var selectedBottomTab by remember { mutableStateOf("Chats") }
 
-    // Filter sessions based on list tab
     val filteredSessions = remember(sessions, selectedListTab) {
         when (selectedListTab) {
             "ACTIVE" -> sessions.filter { it.status == ChatSessionStatus.ACTIVE || it.status == ChatSessionStatus.PAUSED }
@@ -56,13 +54,13 @@ fun ChatListScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Ink)
+            .background(Cream)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 72.dp) // Nav bar space
+                .padding(bottom = 72.dp)
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
@@ -70,20 +68,21 @@ fun ChatListScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier
                         .size(40.dp)
+                        .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E293B))
+                        .background(CardWhite)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Paper
+                        tint = TextPrimary
                     )
                 }
 
@@ -91,10 +90,9 @@ fun ChatListScreen(
 
                 Text(
                     text = "Chats",
-                    color = Paper,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
@@ -104,7 +102,8 @@ fun ChatListScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(width = 0.5.dp, color = Color(0xFF1A2438))
+                    .border(width = 1.dp, color = SoftGray)
+                    .background(CardWhite)
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
@@ -121,20 +120,18 @@ fun ChatListScreen(
                     ) {
                         Text(
                             text = labelText,
-                            color = if (isTabSelected) Signal else Slate,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            letterSpacing = 1.sp
+                            color = if (isTabSelected) Mango else TextSecondary,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Hairline active indicator line
                         Box(
                             modifier = Modifier
-                                .size(width = 48.dp, height = 2.dp)
-                                .background(if (isTabSelected) Signal else Color.Transparent)
+                                .size(width = 48.dp, height = 3.dp)
+                                .clip(RoundedCornerShape(1.5.dp))
+                                .background(if (isTabSelected) Mango else Color.Transparent)
                         )
                     }
                 }
@@ -143,19 +140,39 @@ fun ChatListScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Chat Items list
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(filteredSessions) { session ->
-                    ChatSessionRow(
-                        session = session,
-                        onClick = { onSessionClick(session) }
+            if (filteredSessions.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val subtitleText = when (selectedListTab) {
+                        "ACTIVE" -> "Scan nearby to start live proximity chats."
+                        "REQUESTS" -> "You have no incoming request messages."
+                        else -> "Make connections permanent to chat anytime."
+                    }
+                    NearNowEmptyState(
+                        emojiSymbol = "💬",
+                        title = "No conversations here",
+                        subtitle = subtitleText
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp)
+                ) {
+                    items(filteredSessions) { session ->
+                        ChatSessionRow(
+                            session = session,
+                            onClick = { onSessionClick(session) }
+                        )
+                    }
                 }
             }
         }
@@ -166,7 +183,7 @@ fun ChatListScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
-            DiscoveryBottomBar(
+            NearNowBottomNav(
                 selectedTab = selectedBottomTab,
                 onTabClick = {
                     selectedBottomTab = it
@@ -188,31 +205,23 @@ fun ChatSessionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(if (isPaused) 0.5f else 1.0f) // 50% opacity for paused chats
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF121A2B))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(16.dp))
+            .alpha(if (isPaused) 0.6f else 1.0f)
+            .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+            .clip(RoundedCornerShape(20.dp))
+            .background(CardWhite)
+            .border(1.dp, SoftGray, RoundedCornerShape(20.dp))
             .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Initials avatar
-        val baseColor = Color(session.user.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt())
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(baseColor.copy(alpha = 0.2f))
-                .border(2.dp, baseColor, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = session.user.initials,
-                color = baseColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+        // Initials avatar circle replaced with NearNowAvatar
+        NearNowAvatar(
+            user = session.user,
+            size = AvatarSize.MEDIUM,
+            showOnlineIndicator = session.user.isOnline,
+            showStoryRing = session.user.hasActiveStory,
+            showVerifiedBadge = session.user.isVerified
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -222,8 +231,8 @@ fun ChatSessionRow(
         ) {
             Text(
                 text = session.user.name,
-                color = Paper,
-                fontSize = 16.sp,
+                color = TextPrimary,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
@@ -231,38 +240,20 @@ fun ChatSessionRow(
 
             Text(
                 text = lastMessage,
-                color = Slate,
-                fontSize = 14.sp,
-                maxLines = 1
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Right side: Active distance readout in green mono or Paused tag in orange/coral outline
+        // Right side: Active distance chip or Paused badge
         if (isPaused) {
-            Box(
-                modifier = Modifier
-                    .border(0.5.dp, Coral, RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "PAUSED",
-                    color = Coral,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
-                )
-            }
+            PausedBadge()
         } else {
-            Text(
-                text = "${session.user.distanceMeters}M",
-                color = Signal,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
+            NearNowTealChip(label = "${session.user.distanceMeters}M")
         }
     }
 }

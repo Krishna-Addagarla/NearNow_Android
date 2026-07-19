@@ -1,18 +1,12 @@
 package com.example.nearnow.ui.screens.profileSetUp
 
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,20 +14,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import com.example.nearnow.ui.components.NearNowActiveChip
+import com.example.nearnow.ui.components.NearNowChip
+import com.example.nearnow.ui.theme.*
 
-/* ---------------------------------------------------------------
-   STEP 3 / 4 — "Pick six, max"
-   Uppercase mono interest tags, multi-select with a max of 6.
-   Uses Accompanist FlowRow for simple, dependency-light wrapping.
-   If you don't have Accompanist, swap FlowRow for a LazyVerticalGrid.
-   --------------------------------------------------------------- */
 private val availableInterests = listOf(
     "COFFEE", "PHOTOGRAPHY", "MUSIC", "RUNNING", "BOARDS",
     "FOOD", "CYCLING", "TREKKING", "ART", "TRAVEL"
@@ -59,70 +47,43 @@ fun UserInterestsScreen(
         Column {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 availableInterests.forEach { interest ->
-                    InterestTag(
-                        label = interest,
-                        isSelected = interest in selected,
-                        onClick = {
-                            selected = when {
-                                interest in selected -> selected - interest
-                                selected.size < maxSelectable -> selected + interest
-                                else -> selected // limit reached, ignore tap
+                    val isSelected = interest in selected
+                    if (isSelected) {
+                        NearNowActiveChip(
+                            label = interest,
+                            onClick = { selected = selected - interest }
+                        )
+                    } else {
+                        NearNowChip(
+                            label = interest,
+                            onClick = {
+                                if (selected.size < maxSelectable) {
+                                    selected = selected + interest
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "%02d / %02d SELECTED".format(selected.size, maxSelectable),
-                color = NearNowColors.Signal,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                letterSpacing = 1.sp,
-                fontWeight = FontWeight.Medium
+                color = Mango,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
             )
         }
     }
 }
 
-@Composable
-private fun InterestTag(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Text(
-        text = label,
-        color = if (isSelected) NearNowColors.Ink else NearNowColors.Slate,
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        letterSpacing = 0.5.sp,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                if (isSelected) NearNowColors.Signal
-                else NearNowColors.FieldFill
-            )
-            .border(
-                width = 1.dp,
-                color = if (isSelected) NearNowColors.Signal else NearNowColors.Slate.copy(alpha = 0.25f),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
-fun UserInterestsScreenPreview(){
-    UserInterestsScreen(
-
-    )
+fun UserInterestsScreenPreview() {
+    UserInterestsScreen()
 }

@@ -1,43 +1,42 @@
 package com.example.nearnow.ui.screens.chat
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.ChatSession
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
-import androidx.compose.animation.core.*
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.draw.scale
-import androidx.compose.foundation.clickable
+import com.example.nearnow.ui.components.AvatarSize
+import com.example.nearnow.ui.components.NearNowAvatar
+import com.example.nearnow.ui.components.NearNowPrimaryButton
+import com.example.nearnow.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 @Composable
 fun PausedChatScreen(
@@ -58,7 +57,7 @@ fun PausedChatScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Ink)
+            .background(Cream)
     ) {
         // Dimmed concentric double-ring radar visual in the center background
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -68,17 +67,15 @@ fun PausedChatScreen(
             val ringRadius2 = size.width * 0.35f
             val pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
 
-            // Outer ring
             drawCircle(
-                color = Slate.copy(alpha = 0.15f),
+                color = SoftGray,
                 radius = ringRadius2,
                 center = Offset(centerX, centerY),
                 style = Stroke(width = 1.5f, pathEffect = pathEffect)
             )
 
-            // Inner ring
             drawCircle(
-                color = Slate.copy(alpha = 0.2f),
+                color = SoftGray.copy(alpha = 0.5f),
                 radius = ringRadius1,
                 center = Offset(centerX, centerY),
                 style = Stroke(width = 1.5f)
@@ -101,34 +98,23 @@ fun PausedChatScreen(
                     onClick = onBackClick,
                     modifier = Modifier
                         .size(40.dp)
+                        .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
                         .clip(CircleShape)
-                        .background(Color(0xFF1E293B))
+                        .background(CardWhite)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Paper
+                        tint = TextPrimary
                     )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Avatar
-                val avatarColor = Color(session.user.avatarColorHex.removePrefix("#").toInt(16) or 0xFF000000.toInt())
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(avatarColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = session.user.initials,
-                        color = Paper,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                NearNowAvatar(
+                    user = session.user,
+                    size = AvatarSize.SMALL
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -136,26 +122,25 @@ fun PausedChatScreen(
                 Column {
                     Text(
                         text = session.user.name,
-                        color = Paper,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        color = TextPrimary,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                    // Orange Paused Tag
+                    // Paused Tag
                     Box(
                         modifier = Modifier
+                            .background(Coral.copy(alpha = 0.08f), RoundedCornerShape(4.dp))
                             .border(1.dp, Coral, RoundedCornerShape(4.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "PAUSED · OUT OF RANGE",
                             color = Coral,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -170,10 +155,9 @@ fun PausedChatScreen(
             ) {
                 Text(
                     text = "Signal lost",
-                    color = Paper,
-                    fontFamily = FontFamily.Serif,
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 30.sp,
                     textAlign = TextAlign.Center
                 )
 
@@ -181,11 +165,11 @@ fun PausedChatScreen(
 
                 Text(
                     text = "${session.user.name} moved out of range. This resumes the moment you're both back within 500m.",
-                    color = Slate,
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp,
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    lineHeight = 22.sp
                 )
             }
 
@@ -198,27 +182,28 @@ fun PausedChatScreen(
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Info block
+                // Info block inside NearNowCard style
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF0F172A))
-                        .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
+                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(CardWhite)
+                        .border(1.5.dp, SoftGray, RoundedCornerShape(20.dp))
                         .padding(16.dp)
                 ) {
                     Column {
                         Text(
                             text = "Make it permanent?",
-                            color = Paper,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Stay connected regardless of distance — both must agree.",
-                            color = Slate,
-                            fontSize = 13.sp,
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodyMedium,
                             lineHeight = 18.sp
                         )
                     }
@@ -226,36 +211,18 @@ fun PausedChatScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Button(
-                    onClick = {
-                        pendingPermanentState = true
-                    },
+                NearNowPrimaryButton(
+                    text = if (pendingPermanentState) "PENDING APPROVAL..." else "CONNECT PERMANENTLY",
+                    onClick = { pendingPermanentState = true },
                     enabled = !pendingPermanentState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Signal,
-                        contentColor = Ink,
-                        disabledContainerColor = Color(0xFF1E293B),
-                        disabledContentColor = Slate
-                    )
-                ) {
-                    Text(
-                        text = if (pendingPermanentState) "PENDING APPROVAL..." else "CONNECT PERMANENTLY",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
-                    )
-                }
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
 
-        // Gold lock connection celebration overlay
+        // Gold lock connection celebration overlay with sparkle confetti animations
         if (showCelebration) {
             val infiniteTransition = rememberInfiniteTransition(label = "celebration")
             val scale by infiniteTransition.animateFloat(
@@ -279,11 +246,27 @@ fun PausedChatScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Ink.copy(alpha = 0.96f))
+                    .background(Color.Black.copy(alpha = 0.95f))
                     .clickable { /* Eat clicks */ }
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
+                // Background Confetti Canvas
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val random = Random(42)
+                    for (i in 0..30) {
+                        val x = random.nextFloat() * size.width
+                        val y = random.nextFloat() * size.height
+                        val sizeConfetti = random.nextFloat() * 8f + 4f
+                        val colorConfetti = if (random.nextBoolean()) Mango else Teal
+                        drawCircle(
+                            color = colorConfetti.copy(alpha = 0.6f),
+                            radius = sizeConfetti,
+                            center = Offset(x, y)
+                        )
+                    }
+                }
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
@@ -321,10 +304,9 @@ fun PausedChatScreen(
 
                     Text(
                         text = "Connection Locked",
-                        color = Paper,
-                        fontFamily = FontFamily.Serif,
+                        color = CardWhite,
+                        style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 32.sp,
                         textAlign = TextAlign.Center
                     )
 
@@ -332,38 +314,24 @@ fun PausedChatScreen(
 
                     Text(
                         text = "Proximity boundaries have been lifted! You and ${session.user.name} are now connected permanently.",
-                        color = Slate,
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp,
+                        color = SoftGray,
+                        style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        lineHeight = 22.sp
                     )
 
                     Spacer(modifier = Modifier.height(48.dp))
 
-                    Button(
+                    NearNowPrimaryButton(
+                        text = "ENTER CHAT",
                         onClick = {
                             showCelebration = false
                             pendingPermanentState = false
                             onConnectPermanentlyClick()
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD700),
-                            contentColor = Ink
-                        )
-                    ) {
-                        Text(
-                            text = "ENTER CHAT",
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp,
-                            fontSize = 15.sp
-                        )
-                    }
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

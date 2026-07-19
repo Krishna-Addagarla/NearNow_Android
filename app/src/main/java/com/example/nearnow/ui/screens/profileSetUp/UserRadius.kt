@@ -1,8 +1,6 @@
 package com.example.nearnow.ui.screens.profileSetUp
 
 import androidx.compose.ui.tooling.preview.Preview
-
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -20,12 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nearnow.ui.theme.*
 import kotlin.math.roundToInt
 
 /* ---------------------------------------------------------------
@@ -52,29 +50,30 @@ fun ProfileRadiusScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             RadiusDial(radiusMeters = radiusMeters.roundToInt())
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Slider(
                 value = radiusMeters,
                 onValueChange = { radiusMeters = it },
                 valueRange = minMeters.toFloat()..maxMeters.toFloat(),
                 colors = SliderDefaults.colors(
-                    thumbColor = NearNowColors.Signal,
-                    activeTrackColor = NearNowColors.Signal,
-                    inactiveTrackColor = NearNowColors.FieldFill
+                    thumbColor = Mango,
+                    activeTrackColor = Mango,
+                    inactiveTrackColor = SoftGray
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = "${minMeters}m – ${maxMeters / 1000}km",
-                color = NearNowColors.Slate,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -82,7 +81,7 @@ fun ProfileRadiusScreen(
 
 /**
  * Concentric dashed/solid ring with the radius value centered inside —
- * mirrors the "radar" visual language from the splash screen.
+ * mirrors the "radar" visual language.
  */
 @Composable
 private fun RadiusDial(radiusMeters: Int) {
@@ -95,21 +94,21 @@ private fun RadiusDial(radiusMeters: Int) {
 
             // Outer faint guide ring
             drawCircle(
-                color = NearNowColors.Slate.copy(alpha = 0.15f),
+                color = TextSecondary.copy(alpha = 0.15f),
                 radius = size.minDimension / 2 - strokeWidth,
                 style = Stroke(width = strokeWidth)
             )
 
             // Inner faint guide ring
             drawCircle(
-                color = NearNowColors.Slate.copy(alpha = 0.1f),
+                color = TextSecondary.copy(alpha = 0.1f),
                 radius = (size.minDimension / 2 - strokeWidth) * 0.65f,
                 style = Stroke(width = strokeWidth)
             )
 
-            // Active Signal-colored ring representing current radius
+            // Active Mango-colored ring representing current radius
             drawCircle(
-                color = NearNowColors.Signal,
+                color = Mango,
                 radius = size.minDimension / 2 - strokeWidth,
                 style = Stroke(width = strokeWidth * 1.5f)
             )
@@ -117,8 +116,8 @@ private fun RadiusDial(radiusMeters: Int) {
 
         Text(
             text = "${radiusMeters}m",
-            color = NearNowColors.Signal,
-            fontFamily = FontFamily.Monospace,
+            color = Mango,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp
         )
@@ -127,8 +126,6 @@ private fun RadiusDial(radiusMeters: Int) {
 
 @Preview(showBackground = true)
 @Composable
-fun ProfileRadiusScreenPreview(){
-    ProfileRadiusScreen(
-
-    )
+fun ProfileRadiusScreenPreview() {
+    ProfileRadiusScreen()
 }

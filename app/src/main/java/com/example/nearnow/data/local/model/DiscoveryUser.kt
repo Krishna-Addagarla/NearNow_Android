@@ -12,11 +12,15 @@ data class DiscoveryUser(
     val hasActiveStory: Boolean,
     val storyTimeAgo: String? = null,
     val hasInvite: Boolean = false,
-    val avatarColorHex: String = "#8B96A8",
+    val avatarColorHex: String = "#FFB000",
     val initials: String = "",
     // Position coordinates relative to map center (-1.0f to 1.0f)
     val mapX: Float = 0f,
-    val mapY: Float = 0f
+    val mapY: Float = 0f,
+    val photoUrls: List<String> = emptyList(),
+    val interests: List<String> = emptyList(),
+    val isOnline: Boolean = false,
+    val isVerified: Boolean = false
 ) {
     companion object {
         val mockUsers = listOf(
@@ -29,10 +33,14 @@ data class DiscoveryUser(
                 hasActiveStory = true,
                 storyTimeAgo = "22m ago",
                 hasInvite = false,
-                avatarColorHex = "#00E6A8", // Signal color
+                avatarColorHex = "#FFB000", // Mango
                 initials = "AR",
                 mapX = 0.6f,
-                mapY = -0.2f
+                mapY = -0.2f,
+                photoUrls = listOf("photo_arjun_1"),
+                interests = listOf("COFFEE", "MUSIC", "RUNNING"),
+                isOnline = true,
+                isVerified = true
             ),
             DiscoveryUser(
                 id = "2",
@@ -42,10 +50,14 @@ data class DiscoveryUser(
                 bio = "UX researcher. Love discovering hidden spots in the city and grabbing bubble tea.",
                 hasActiveStory = false,
                 hasInvite = true,
-                avatarColorHex = "#FF6B4A", // Coral color
+                avatarColorHex = "#FF6B4A", // Coral
                 initials = "SK",
                 mapX = -0.4f,
-                mapY = 0.5f
+                mapY = 0.5f,
+                photoUrls = listOf("photo_sneha_1", "photo_sneha_2"),
+                interests = listOf("BOARDS", "ART", "COFFEE", "TRAVEL"),
+                isOnline = true,
+                isVerified = false
             ),
             DiscoveryUser(
                 id = "3",
@@ -55,12 +67,15 @@ data class DiscoveryUser(
                 bio = "Engineer - Movies, food, gaming. Let's grab some pizza and discuss sci-fi movies.",
                 hasActiveStory = false,
                 hasInvite = false,
-                avatarColorHex = "#8B96A8", // Slate color
+                avatarColorHex = "#25EBE1", // Teal
                 initials = "KM",
                 mapX = -0.2f,
-                mapY = -0.6f
+                mapY = -0.6f,
+                photoUrls = emptyList(),
+                interests = listOf("FOOD", "TRAVEL", "MUSIC"),
+                isOnline = false,
+                isVerified = true
             ),
-            // Let's add a couple more mock users for rich spatial distribution & clustering demo
             DiscoveryUser(
                 id = "4",
                 name = "Priya",
@@ -70,11 +85,14 @@ data class DiscoveryUser(
                 hasActiveStory = true,
                 storyTimeAgo = "1h ago",
                 hasInvite = false,
-                avatarColorHex = "#00E6A8",
+                avatarColorHex = "#FFA000", // Mango dark
                 initials = "PR",
-                // Clustered near Arjun (0.6f, -0.2f) to demonstrate clustering
                 mapX = 0.62f,
-                mapY = -0.23f
+                mapY = -0.23f,
+                photoUrls = listOf("photo_priya_1"),
+                interests = listOf("COFFEE", "PHOTOGRAPHY", "ART"),
+                isOnline = true,
+                isVerified = true
             ),
             DiscoveryUser(
                 id = "5",
@@ -85,11 +103,14 @@ data class DiscoveryUser(
                 hasActiveStory = true,
                 storyTimeAgo = "2h ago",
                 hasInvite = false,
-                avatarColorHex = "#00E6A8",
+                avatarColorHex = "#FFB000",
                 initials = "RN",
-                // Clustered near Arjun and Priya to trigger "+2" or more badge
                 mapX = 0.58f,
-                mapY = -0.18f
+                mapY = -0.18f,
+                photoUrls = emptyList(),
+                interests = listOf("RUNNING", "CYCLING", "COFFEE"),
+                isOnline = false,
+                isVerified = false
             ),
             DiscoveryUser(
                 id = "6",
@@ -102,7 +123,11 @@ data class DiscoveryUser(
                 avatarColorHex = "#FF6B4A",
                 initials = "DS",
                 mapX = 0.1f,
-                mapY = 0.7f
+                mapY = 0.7f,
+                photoUrls = emptyList(),
+                interests = listOf("MUSIC", "TREKKING", "TRAVEL"),
+                isOnline = true,
+                isVerified = false
             )
         )
     }

@@ -16,20 +16,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nearnow.data.local.model.InviteCategory
-import com.example.nearnow.ui.theme.Coral
-import com.example.nearnow.ui.theme.Ink
-import com.example.nearnow.ui.theme.Paper
-import com.example.nearnow.ui.theme.Signal
-import com.example.nearnow.ui.theme.Slate
+import com.example.nearnow.ui.components.NearNowChip
+import com.example.nearnow.ui.components.NearNowCoralChip
+import com.example.nearnow.ui.components.NearNowDestructiveButton
+import com.example.nearnow.ui.theme.*
 
 @Composable
 fun InviteCreateScreen(
@@ -39,7 +39,7 @@ fun InviteCreateScreen(
     var selectedCategory by remember { mutableStateOf(InviteCategory.COFFEE) }
     var titleText by remember { mutableStateOf("Coffee near Jubilee Hills?") }
     var descText by remember { mutableStateOf("Heading there in ~30 min. Chill vibes.") }
-    var radiusValue by remember { mutableStateOf(2000f) } // default 2km00m
+    var radiusValue by remember { mutableStateOf(2000f) }
 
     val maxCharLimit = 60
     val scrollState = rememberScrollState()
@@ -47,7 +47,7 @@ fun InviteCreateScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Ink)
+            .background(Cream)
             .padding(horizontal = 24.dp)
     ) {
         Column(
@@ -70,26 +70,26 @@ fun InviteCreateScreen(
                         onClick = onBackClick,
                         modifier = Modifier
                             .size(40.dp)
+                            .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
                             .clip(CircleShape)
-                            .background(Color(0xFF1E293B))
+                            .background(CardWhite)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Paper
+                            tint = TextPrimary
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // Serif Title
+                // Title
                 Text(
                     text = "New invite",
-                    color = Paper,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(28.dp))
@@ -97,11 +97,9 @@ fun InviteCreateScreen(
                 // Category tag selection
                 Text(
                     text = "CATEGORY",
-                    color = Slate,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    color = TextMuted,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -112,25 +110,15 @@ fun InviteCreateScreen(
                 ) {
                     InviteCategory.values().forEach { category ->
                         val isSelected = category == selectedCategory
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (isSelected) Coral else Color.Transparent)
-                                .border(
-                                    width = 1.dp,
-                                    color = if (isSelected) Coral else Slate.copy(alpha = 0.5f),
-                                    shape = RoundedCornerShape(6.dp)
-                                )
-                                .clickable { selectedCategory = category }
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = category.name,
-                                color = if (isSelected) Paper else Slate,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                letterSpacing = 0.5.sp
+                        if (isSelected) {
+                            NearNowCoralChip(
+                                label = category.name,
+                                onClick = { selectedCategory = category }
+                            )
+                        } else {
+                            NearNowChip(
+                                label = category.name,
+                                onClick = { selectedCategory = category }
                             )
                         }
                     }
@@ -145,17 +133,14 @@ fun InviteCreateScreen(
                 ) {
                     Text(
                         text = "TITLE",
-                        color = Slate,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        color = TextMuted,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${titleText.length}/$maxCharLimit",
-                        color = if (titleText.length > maxCharLimit) Coral else Slate,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp
+                        color = if (titleText.length > maxCharLimit) Coral else TextSecondary,
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
 
@@ -165,20 +150,31 @@ fun InviteCreateScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF1E293B))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(FieldFill)
+                        .border(1.dp, SoftGray, RoundedCornerShape(16.dp))
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     BasicTextField(
                         value = titleText,
                         onValueChange = { if (it.length <= maxCharLimit) titleText = it },
-                        textStyle = TextStyle(color = Paper, fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                        textStyle = TextStyle(
+                            color = TextPrimary,
+                            fontSize = 15.sp,
+                            fontFamily = PoppinsFamily,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        cursorBrush = SolidColor(Mango),
                         modifier = Modifier.fillMaxWidth(),
                         decorationBox = { innerTextField ->
                             if (titleText.isEmpty()) {
-                                Text(text = "Title of invite...", color = Slate.copy(alpha = 0.5f), fontSize = 15.sp)
+                                Text(
+                                    text = "Title of invite...",
+                                    color = TextMuted,
+                                    fontFamily = PoppinsFamily,
+                                    fontSize = 15.sp
+                                )
                             }
                             innerTextField()
                         }
@@ -190,11 +186,9 @@ fun InviteCreateScreen(
                 // Description input container
                 Text(
                     text = "DESCRIPTION",
-                    color = Slate,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    color = TextMuted,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -203,19 +197,29 @@ fun InviteCreateScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(96.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF1E293B))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(FieldFill)
+                        .border(1.dp, SoftGray, RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 ) {
                     BasicTextField(
                         value = descText,
                         onValueChange = { descText = it },
-                        textStyle = TextStyle(color = Paper, fontSize = 15.sp),
+                        textStyle = TextStyle(
+                            color = TextPrimary,
+                            fontSize = 15.sp,
+                            fontFamily = PoppinsFamily
+                        ),
+                        cursorBrush = SolidColor(Mango),
                         modifier = Modifier.fillMaxSize(),
                         decorationBox = { innerTextField ->
                             if (descText.isEmpty()) {
-                                Text(text = "Details (e.g. heading there in 30 mins)...", color = Slate.copy(alpha = 0.5f), fontSize = 15.sp)
+                                Text(
+                                    text = "Details (e.g. heading there in 30 mins)...",
+                                    color = TextMuted,
+                                    fontFamily = PoppinsFamily,
+                                    fontSize = 15.sp
+                                )
                             }
                             innerTextField()
                         }
@@ -232,24 +236,20 @@ fun InviteCreateScreen(
                 ) {
                     Text(
                         text = "RADIUS",
-                        color = Slate,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
+                        color = TextMuted,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${radiusValue.toInt()}M",
                         color = Coral,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Coral Slider
                 Slider(
                     value = radiusValue,
                     onValueChange = { radiusValue = it },
@@ -257,7 +257,7 @@ fun InviteCreateScreen(
                     colors = SliderDefaults.colors(
                         thumbColor = Coral,
                         activeTrackColor = Coral,
-                        inactiveTrackColor = Color(0xFF1E293B)
+                        inactiveTrackColor = SoftGray
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -273,40 +273,24 @@ fun InviteCreateScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // POST INVITE primary button (Coral background)
-                Button(
+                NearNowDestructiveButton(
+                    text = "POST INVITE",
                     onClick = {
                         onPostInvite(titleText, descText, selectedCategory, radiusValue.toInt())
                     },
                     enabled = titleText.isNotEmpty() && descText.isNotEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Coral,
-                        contentColor = Ink,
-                        disabledContainerColor = Coral.copy(alpha = 0.4f),
-                        disabledContentColor = Ink.copy(alpha = 0.6f)
-                    )
-                ) {
-                    Text(
-                        text = "POST INVITE",
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
-                    )
-                }
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // BOOST FOR ₹49 secondary button (outlined dark box)
+                // BOOST FOR ₹49 secondary button (outlined Coral box)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, Coral, RoundedCornerShape(14.dp))
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .border(1.5.dp, Coral, RoundedCornerShape(24.dp))
                         .background(Color.Transparent)
                         .clickable { /* Boost logic */ },
                     contentAlignment = Alignment.Center
@@ -314,20 +298,17 @@ fun InviteCreateScreen(
                     Text(
                         text = "⚡ BOOST FOR ₹49",
                         color = Coral,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp,
-                        fontSize = 15.sp
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Explainer tooltip detailing Boost benefits to address UX ambiguity
                 Text(
                     text = "Boost makes your invite live for 12 hours and doubles visibility radius.",
-                    color = Slate.copy(alpha = 0.6f),
-                    fontSize = 10.sp,
+                    color = TextMuted,
+                    style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
