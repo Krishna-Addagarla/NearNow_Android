@@ -7,12 +7,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -82,19 +81,67 @@ private fun PhotoSlotGrid(
     slots: List<Boolean>,
     onSlotClick: (Int) -> Unit
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        items(slots.size) { index ->
-            PhotoSlot(
-                index = index,
-                isFilled = slots[index],
-                isCoverSlot = index == 0,
-                onClick = { onSlotClick(index) }
-            )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                PhotoSlot(
+                    index = 0,
+                    isFilled = slots[0],
+                    isCoverSlot = true,
+                    onClick = { onSlotClick(0) }
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                PhotoSlot(
+                    index = 1,
+                    isFilled = slots[1],
+                    isCoverSlot = false,
+                    onClick = { onSlotClick(1) }
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                PhotoSlot(
+                    index = 2,
+                    isFilled = slots[2],
+                    isCoverSlot = false,
+                    onClick = { onSlotClick(2) }
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                PhotoSlot(
+                    index = 3,
+                    isFilled = slots[3],
+                    isCoverSlot = false,
+                    onClick = { onSlotClick(3) }
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                PhotoSlot(
+                    index = 4,
+                    isFilled = slots[4],
+                    isCoverSlot = false,
+                    onClick = { onSlotClick(4) }
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                PhotoSlot(
+                    index = 5,
+                    isFilled = slots[5],
+                    isCoverSlot = false,
+                    onClick = { onSlotClick(5) }
+                )
+            }
         }
     }
 }

@@ -1,31 +1,30 @@
 package com.example.nearnow.ui.screens.onBoaring
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -48,48 +47,52 @@ data class OnboardingPage(
     val secondaryButtonText: String? = null
 )
 
-private val onboardingPages = listOf(
-    OnboardingPage(
-        pageNumber = 1,
-        titleLines = listOf(
-            "Distance\nhas\nurgency." to false,
-            "\nAlgorithms\ndon't." to true
-        ),
-        subtitle = "No 40km matches. Only people close enough to actually meet — today."
-    ),
-    OnboardingPage(
-        pageNumber = 2,
-        titleLines = listOf(
-            "We show a " to false,
-            "band" to true,
-            ",\nnever a pin." to false
-        ),
-        subtitle = "No coordinates. No movement trail. Updates every two minutes.",
-        extra = { DistanceBandBadge(distanceMeters = 182, noiseMeters = 38) }
-    ),
-    OnboardingPage(
-        pageNumber = 3,
-        titleLines = listOf(
-            "One\npermission.\nThat's it." to false
-        ),
-        subtitle = "Location, while the app is open. Used only to compute the band above.",
-        extra = {
-            Column {
-                BulletItem(text = "Show nearby people on the map")
-                Spacer(modifier = Modifier.height(14.dp))
-                BulletItem(text = "Pause chats when out of range")
-            }
-        },
-        primaryButtonText = "ALLOW LOCATION ACCESS",
-        secondaryButtonText = "NOT NOW"
-    )
-)
-
 @Composable
 fun OnboardingScreen(
     onFinish: () -> Unit = {},
     onLocationPermissionRequested: () -> Unit = {}
 ) {
+    val onboardingPages = listOf(
+        OnboardingPage(
+            pageNumber = 1,
+            titleLines = listOf(
+                "Distance\nhas\n" to false,
+                "urgency." to true,
+                "\nAlgorithms don't." to false
+            ),
+            subtitle = "No 40km matches. Only people close enough to actually meet — today.",
+            extra = { PulseMapUrgencyVisual() }
+        ),
+        OnboardingPage(
+            pageNumber = 2,
+            titleLines = listOf(
+                "We show a\n" to false,
+                "band" to true,
+                ", never a pin." to false
+            ),
+            subtitle = "No coordinates. No movement trail. Safe updates every two minutes.",
+            extra = { DistanceBandBadge(distanceMeters = 180, noiseMeters = 40) }
+        ),
+        OnboardingPage(
+            pageNumber = 3,
+            titleLines = listOf(
+                "One\npermission.\nThat's it." to false
+            ),
+            subtitle = "Location, while the app is open. Used only to compute the safety band.",
+            extra = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BulletItem(text = "Show nearby people on the map")
+                    BulletItem(text = "Pause chats when out of range")
+                }
+            },
+            primaryButtonText = "ALLOW LOCATION ACCESS",
+            secondaryButtonText = "NOT NOW"
+        )
+    )
+
     val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
     val scope = rememberCoroutineScope()
 
@@ -122,7 +125,15 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Cream)
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        MangoLight.copy(alpha = 0.05f),
+                        Cream
+                    ),
+                    radius = 1000f
+                )
+            )
     ) {
         Column(
             modifier = Modifier
@@ -132,15 +143,24 @@ fun OnboardingScreen(
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            Text(
-                text = "%02d / %02d".format(page.pageNumber, totalPages),
-                color = Coral,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
+            // Step Counter Tag
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Coral.copy(alpha = 0.08f))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = "%02d / %02d".format(page.pageNumber, totalPages),
+                    color = Coral,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            // Display Title
             Text(
                 text = buildAnnotatedString {
                     page.titleLines.forEach { (text, isEmphasis) ->
@@ -157,16 +177,25 @@ fun OnboardingScreen(
                     }
                 },
                 style = MaterialTheme.typography.displayMedium,
-                lineHeight = 38.sp
+                lineHeight = 36.sp
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Premium visual item slot
             page.extra?.let { extraContent ->
-                extraContent()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    extraContent()
+                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            // Subtitle description text
             Text(
                 text = page.subtitle,
                 color = TextSecondary,
@@ -204,7 +233,7 @@ fun OnboardingScreen(
 @Composable
 private fun PageProgressIndicator(totalPages: Int, currentPage: Int) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         for (i in 1..totalPages) {
@@ -212,7 +241,7 @@ private fun PageProgressIndicator(totalPages: Int, currentPage: Int) {
             Box(
                 modifier = Modifier
                     .height(5.dp)
-                    .width(if (isActive) 28.dp else 16.dp)
+                    .width(if (isActive) 28.dp else 12.dp)
                     .clip(RoundedCornerShape(2.5.dp))
                     .background(
                         if (isActive) Mango
@@ -223,49 +252,177 @@ private fun PageProgressIndicator(totalPages: Int, currentPage: Int) {
     }
 }
 
+/**
+ * Slide 1 Graphic: Pulse Map Urgency Visual representation
+ * Animated canvas drawing real-time connection circles pulsing
+ */
 @Composable
-private fun DistanceBandBadge(distanceMeters: Int, noiseMeters: Int) {
-    Box(
+private fun PulseMapUrgencyVisual() {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse_urgency")
+    val pulseSize by infiniteTransition.animateFloat(
+        initialValue = 20f,
+        targetValue = 90f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = EaseOutQuad),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse"
+    )
+
+    Canvas(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(
-                width = 1.5.dp,
-                color = MangoLight,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .background(MangoLight.copy(alpha = 0.08f))
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .clip(RoundedCornerShape(24.dp))
+            .background(CardWhite)
+            .border(1.dp, SoftGray, RoundedCornerShape(24.dp))
     ) {
-        Text(
-            text = "${distanceMeters}m ± ${noiseMeters}m noise",
-            color = TextPrimary,
-            fontFamily = PoppinsFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
-            letterSpacing = 0.5.sp
+        val center = Offset(size.width / 2, size.height / 2)
+
+        // Pulsing urgent waves
+        drawCircle(
+            color = Mango.copy(alpha = (1f - (pulseSize / 90f)) * 0.25f),
+            radius = pulseSize,
+            center = center,
+            style = Stroke(width = 3.dp.toPx())
+        )
+
+        drawCircle(
+            color = Teal.copy(alpha = (1f - (pulseSize / 90f)) * 0.15f),
+            radius = pulseSize * 0.7f,
+            center = center,
+            style = Stroke(width = 2.dp.toPx())
+        )
+
+        // Map Node Self (YOU)
+        drawCircle(
+            color = Mango,
+            radius = 16f,
+            center = center
+        )
+
+        drawCircle(
+            color = CardWhite,
+            radius = 8f,
+            center = center
         )
     }
 }
 
+/**
+ * Slide 2 Graphic: Proximity radar band diagram
+ * Replaces the simple text box with a gorgeous graphic
+ */
+@Composable
+private fun DistanceBandBadge(distanceMeters: Int, noiseMeters: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(24.dp))
+            .background(CardWhite)
+            .border(1.dp, SoftGray, RoundedCornerShape(24.dp))
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left side: Radar dial canvas
+            Canvas(
+                modifier = Modifier
+                    .size(100.dp)
+                    .weight(0.45f)
+            ) {
+                val center = Offset(size.width / 2, size.height / 2)
+
+                // Shaded circular band
+                drawCircle(
+                    color = MangoLight.copy(alpha = 0.18f),
+                    radius = 42f,
+                    center = center,
+                    style = Stroke(width = 16f)
+                )
+
+                // Concentric inner line
+                drawCircle(
+                    color = SoftGray,
+                    radius = 24f,
+                    center = center,
+                    style = Stroke(width = 2f)
+                )
+
+                // Center node
+                drawCircle(
+                    color = Mango,
+                    radius = 6f,
+                    center = center
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Right side: readout details
+            Column(
+                modifier = Modifier.weight(0.55f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "PROXIMITY BAND",
+                    color = Teal,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "~${distanceMeters}m distance",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "±${noiseMeters}m safety buffer",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Slide 3: Clean Checkmark item row card
+ */
 @Composable
 private fun BulletItem(text: String) {
-    Row(verticalAlignment = Alignment.Top) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardWhite)
+            .border(1.dp, SoftGray, RoundedCornerShape(16.dp))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Box(
             modifier = Modifier
-                .padding(top = 8.dp)
-                .size(8.dp)
+                .size(24.dp)
                 .clip(CircleShape)
-                .background(Mango)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
+                .background(Mango.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Checked",
+                tint = Mango,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
         Text(
             text = text,
             color = TextPrimary,
-            style = MaterialTheme.typography.bodyLarge,
-            lineHeight = 22.sp,
-            fontWeight = FontWeight.Medium
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
