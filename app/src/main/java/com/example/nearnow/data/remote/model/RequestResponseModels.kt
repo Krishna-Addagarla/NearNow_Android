@@ -20,7 +20,8 @@ data class OtpVerifyRequest(
 data class TokenResponse(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("token_type") val tokenType: String,
-    @SerializedName("user_id") val userId: Int
+    @SerializedName("user_id") val userId: Int,
+    @SerializedName("has_profile") val hasProfile: Boolean = false
 )
 
 data class FirebaseVerifyRequest(

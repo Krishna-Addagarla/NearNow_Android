@@ -41,6 +41,22 @@ import com.example.nearnow.ui.components.NearNowBottomSheet
 import com.example.nearnow.ui.theme.*
 import kotlin.math.sqrt
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import com.example.nearnow.data.remote.repository.ProfileRepository
+import com.example.nearnow.data.remote.repository.DiscoveryRepository
+import com.example.nearnow.data.remote.model.ProfileResponse
+import com.example.nearnow.data.remote.model.ProfileUpsert
+import com.example.nearnow.data.remote.model.NearbyProfile
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.RangeSlider
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import com.example.nearnow.ui.components.NearNowPrimaryButton
+import com.example.nearnow.ui.components.NearNowSecondaryButton
+import kotlin.math.roundToInt
 
 // Cluster helper class
 data class DiscoveryCluster(
@@ -51,6 +67,8 @@ data class DiscoveryCluster(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiscoveryMapScreen(
+    profileRepository: ProfileRepository? = null,
+    discoveryRepository: DiscoveryRepository? = null,
     onNavigateToTab: (String) -> Unit = {},
     onNavigateToChatCompose: (String) -> Unit = {},
     onNavigateToActiveChat: (String) -> Unit = {}
@@ -61,13 +79,154 @@ fun DiscoveryMapScreen(
     var activeStoryUserForPlayer by remember { mutableStateOf<DiscoveryUser?>(null) }
     var isInvisibleMode by remember { mutableStateOf(false) }
 
-    val clusters = remember(DiscoveryUser.mockUsers) {
-        clusterUsers(DiscoveryUser.mockUsers, threshold = 0.22f)
+    // Filter States
+    var showFilterSheet by remember { mutableStateOf(false) }
+    var profileState by remember { mutableStateOf<ProfileResponse?>(null) }
+    var radiusValue by remember { mutableFloatStateOf(2000f) }
+    var selectedGender by remember { mutableStateOf("Everyone") }
+    var minAgeValue by remember { mutableFloatStateOf(18f) }
+    var maxAgeValue by remember { mutableFloatStateOf(60f) }
+
+    var nearbyUsers by remember { mutableStateOf<List<DiscoveryUser>>(emptyList()) }
+    var isFetchingNearby by remember { mutableStateOf(true) }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    fun fetchNearby() {
+        isFetchingNearby = true
+        val discoveryRepo = discoveryRepository
+        if (discoveryRepo == null) {
+            // Fallback to local filtering of mockUsers
+            nearbyUsers = DiscoveryUser.mockUsers.filter { user ->
+                val matchesRadius = user.distanceMeters <= radiusValue
+                val matchesAge = user.age >= minAgeValue.toInt() && user.age <= maxAgeValue.toInt()
+                val matchesGender = when (selectedGender) {
+                    "Everyone" -> true
+                    "Male" -> user.gender == "Male"
+                    "Female" -> user.gender == "Female"
+                    else -> true
+                }
+                matchesRadius && matchesAge && matchesGender
+            }
+            isFetchingNearby = false
+            return
+        }
+        coroutineScope.launch {
+            discoveryRepo.getNearbyUsers()
+                .onSuccess { response ->
+                    if (response.users.isNotEmpty()) {
+                        nearbyUsers = response.users.map { profile ->
+                            val initials = if (profile.displayName.length >= 2) profile.displayName.substring(0, 2).uppercase() else profile.displayName.uppercase()
+                            val dist = when {
+                                profile.distanceBand.contains("200") -> 200
+                                profile.distanceBand.contains("500") -> 500
+                                else -> 1000
+                            }
+                            DiscoveryUser(
+                                id = profile.userId.toString(),
+                                name = profile.displayName,
+                                age = profile.age,
+                                distanceMeters = dist,
+                                bio = profile.bio ?: "",
+                                hasActiveStory = false,
+                                initials = initials,
+                                photoUrls = if (profile.photoUrl != null) listOf(profile.photoUrl) else emptyList(),
+                                gender = profile.gender
+                            )
+                        }
+                    } else {
+                        // Fallback to local filtering of mockUsers
+                        nearbyUsers = DiscoveryUser.mockUsers.filter { user ->
+                            val matchesRadius = user.distanceMeters <= radiusValue
+                            val matchesAge = user.age >= minAgeValue.toInt() && user.age <= maxAgeValue.toInt()
+                            val matchesGender = when (selectedGender) {
+                                "Everyone" -> true
+                                "Male" -> user.gender == "Male"
+                                "Female" -> user.gender == "Female"
+                                else -> true
+                            }
+                            matchesRadius && matchesAge && matchesGender
+                        }
+                    }
+                    isFetchingNearby = false
+                }
+                .onFailure {
+                    // Fallback to local filtering of mockUsers
+                    nearbyUsers = DiscoveryUser.mockUsers.filter { user ->
+                        val matchesRadius = user.distanceMeters <= radiusValue
+                        val matchesAge = user.age >= minAgeValue.toInt() && user.age <= maxAgeValue.toInt()
+                        val matchesGender = when (selectedGender) {
+                            "Everyone" -> true
+                            "Male" -> user.gender == "Male"
+                            "Female" -> user.gender == "Female"
+                            else -> true
+                        }
+                        matchesRadius && matchesAge && matchesGender
+                    }
+                    isFetchingNearby = false
+                }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val profileRepo = profileRepository
+        if (profileRepo != null) {
+            profileRepo.getMyProfile().onSuccess { profile ->
+                profileState = profile
+                radiusValue = profile.discoveryRadiusM.toFloat()
+                isInvisibleMode = profile.isInvisible
+                minAgeValue = profile.minAge.toFloat()
+                maxAgeValue = profile.maxAge.toFloat()
+                selectedGender = when {
+                    profile.interestedIn.contains("Male") && profile.interestedIn.contains("Female") -> "Everyone"
+                    profile.interestedIn.contains("Male") -> "Male"
+                    profile.interestedIn.contains("Female") -> "Female"
+                    else -> "Everyone"
+                }
+                fetchNearby()
+            }
+        } else {
+            fetchNearby()
+        }
+    }
+
+    fun saveFiltersToServer() {
+        val profileRepo = profileRepository ?: return
+        val current = profileState ?: return
+        val interestedInList = when (selectedGender) {
+            "Everyone" -> listOf("Male", "Female")
+            "Male" -> listOf("Male")
+            "Female" -> listOf("Female")
+            else -> listOf("Male", "Female")
+        }
+        val upsert = ProfileUpsert(
+            displayName = current.displayName,
+            birthYear = current.birthYear,
+            gender = current.gender,
+            bio = current.bio,
+            photoUrl = current.photoUrl,
+            interestedIn = interestedInList,
+            minAge = minAgeValue.toInt(),
+            maxAge = maxAgeValue.toInt(),
+            discoveryRadiusM = radiusValue.toInt()
+        )
+        coroutineScope.launch {
+            profileRepo.updateMyProfile(upsert)
+                .onSuccess {
+                    profileState = it
+                    fetchNearby()
+                }
+        }
+    }
+
+    val clusters = remember(nearbyUsers) {
+        clusterUsers(nearbyUsers, threshold = 0.22f)
     }
 
     if (showListView) {
         DiscoveryListScreen(
-            users = DiscoveryUser.mockUsers,
+            users = nearbyUsers,
             onUserClick = { user ->
                 selectedUserForSheet = user
             },
@@ -125,7 +284,33 @@ fun DiscoveryMapScreen(
                     ) {
                         // Ghost Toggle Button (Invisible Mode)
                         IconButton(
-                            onClick = { isInvisibleMode = !isInvisibleMode },
+                            onClick = {
+                                isInvisibleMode = !isInvisibleMode
+                                val repo = profileRepository
+                                if (repo != null) {
+                                    coroutineScope.launch {
+                                        profileState?.let { current ->
+                                            val upsert = ProfileUpsert(
+                                                displayName = current.displayName,
+                                                birthYear = current.birthYear,
+                                                gender = current.gender,
+                                                bio = current.bio,
+                                                photoUrl = current.photoUrl,
+                                                interestedIn = current.interestedIn,
+                                                minAge = minAgeValue.toInt(),
+                                                maxAge = maxAgeValue.toInt(),
+                                                discoveryRadiusM = radiusValue.toInt()
+                                            )
+                                            // Update local + server invisible state
+                                            repo.updateMyProfile(upsert)
+                                                .onSuccess {
+                                                    profileState = it
+                                                    fetchNearby()
+                                                }
+                                        }
+                                    }
+                                }
+                            },
                             modifier = Modifier
                                 .size(44.dp)
                                 .shadow(2.dp, RoundedCornerShape(12.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
@@ -140,6 +325,23 @@ fun DiscoveryMapScreen(
                             Text(
                                 text = "👻",
                                 fontSize = 18.sp
+                            )
+                        }
+
+                        // Filters button
+                        IconButton(
+                            onClick = { showFilterSheet = true },
+                            modifier = Modifier
+                                .size(44.dp)
+                                .shadow(2.dp, RoundedCornerShape(12.dp), spotColor = ShadowColor, ambientColor = ShadowColor)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(CardWhite)
+                                .border(1.5.dp, SoftGray, RoundedCornerShape(12.dp))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Filters",
+                                tint = Mango
                             )
                         }
 
@@ -277,7 +479,7 @@ fun DiscoveryMapScreen(
                     }
                 }
 
-                // 8 NEARBY pill at bottom center of map
+                // Nearby count pill
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
@@ -308,7 +510,7 @@ fun DiscoveryMapScreen(
                                 .background(Teal.copy(alpha = pulseAlpha), CircleShape)
                         )
                         Text(
-                            text = "8 NEARBY - 500M RADIUS",
+                            text = "${nearbyUsers.size} NEARBY - ${radiusValue.toInt()}M RADIUS",
                             color = TextPrimary,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
@@ -333,6 +535,194 @@ fun DiscoveryMapScreen(
                     }
                 )
             }
+        }
+    }
+
+    // Interactive Filters bottom sheet
+    if (showFilterSheet) {
+        NearNowBottomSheet(
+            onDismissRequest = {
+                showFilterSheet = false
+                saveFiltersToServer()
+            }
+        ) {
+            Text(
+                text = "DISCOVERY FILTERS",
+                color = TextPrimary,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 1. Radius slider
+            Text(
+                text = "DISCOVERY RADIUS",
+                color = TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Search range",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${radiusValue.toInt()}m",
+                    color = Mango,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Slider(
+                value = radiusValue,
+                onValueChange = { radiusValue = it },
+                valueRange = 100f..15000f,
+                colors = SliderDefaults.colors(
+                    thumbColor = Mango,
+                    activeTrackColor = Mango,
+                    inactiveTrackColor = SoftGray
+                )
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 2. Gender preference selectors
+            Text(
+                text = "SHOW ME",
+                color = TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("Male", "Female", "Everyone").forEach { genderOption ->
+                    val isSelected = selectedGender == genderOption
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isSelected) Mango else CardWhite)
+                            .border(
+                                width = 1.5.dp,
+                                color = if (isSelected) Mango else SoftGray,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .clickable { selectedGender = genderOption },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = genderOption,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 3. Age Range selection (Min Age)
+            Text(
+                text = "MINIMUM AGE",
+                color = TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Min age limit",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${minAgeValue.toInt()} years",
+                    color = Mango,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Slider(
+                value = minAgeValue,
+                onValueChange = { minAgeValue = it.coerceAtMost(maxAgeValue) },
+                valueRange = 18f..80f,
+                colors = SliderDefaults.colors(
+                    thumbColor = Mango,
+                    activeTrackColor = Mango,
+                    inactiveTrackColor = SoftGray
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 4. Age Range selection (Max Age)
+            Text(
+                text = "MAXIMUM AGE",
+                color = TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Max age limit",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${maxAgeValue.toInt()} years",
+                    color = Mango,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Slider(
+                value = maxAgeValue,
+                onValueChange = { maxAgeValue = it.coerceAtLeast(minAgeValue) },
+                valueRange = 18f..80f,
+                colors = SliderDefaults.colors(
+                    thumbColor = Mango,
+                    activeTrackColor = Mango,
+                    inactiveTrackColor = SoftGray
+                )
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            NearNowPrimaryButton(
+                text = "APPLY FILTERS",
+                onClick = {
+                    showFilterSheet = false
+                    saveFiltersToServer()
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 

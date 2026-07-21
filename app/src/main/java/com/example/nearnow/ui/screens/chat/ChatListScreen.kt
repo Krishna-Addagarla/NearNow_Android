@@ -71,23 +71,6 @@ fun ChatListScreen(
                     .padding(horizontal = 24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .shadow(2.dp, CircleShape, spotColor = ShadowColor, ambientColor = ShadowColor)
-                        .clip(CircleShape)
-                        .background(CardWhite)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = TextPrimary
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
                 Text(
                     text = "Chats",
                     color = TextPrimary,

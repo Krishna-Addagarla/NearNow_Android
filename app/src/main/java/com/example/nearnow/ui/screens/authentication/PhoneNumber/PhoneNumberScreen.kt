@@ -140,12 +140,17 @@ fun PhoneNumberScreen(
                 NearNowPrimaryButton(
                     text = "SEND CODE",
                     onClick = {
-                        if (phoneNumber.trim().isEmpty()) {
+                        val cleanPhone = phoneNumber.replace("\\s|-|\\(|\\)".toRegex(), "")
+                        if (cleanPhone.isEmpty()) {
                             Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
                             return@NearNowPrimaryButton
                         }
+                        if (cleanPhone.length < 8 || cleanPhone.length > 15 || !cleanPhone.all { it.isDigit() }) {
+                            Toast.makeText(context, "Please enter a valid phone number (8 to 15 digits)", Toast.LENGTH_SHORT).show()
+                            return@NearNowPrimaryButton
+                        }
                         isLoading = true
-                        val fullPhone = "$countryCode${phoneNumber.trim()}"
+                        val fullPhone = "$countryCode$cleanPhone"
                         val activity = context as? Activity
                         if (activity != null) {
                             FirebaseAuthManager.sendOtp(

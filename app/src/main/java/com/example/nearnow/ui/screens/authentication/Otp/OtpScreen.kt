@@ -55,7 +55,7 @@ fun OtpScreen(
     verificationId: String,
     phoneNumber: String,
     onBackClick: () -> Unit = {},
-    onVerifySuccess: (token: String) -> Unit = {},
+    onVerifySuccess: (token: String, hasProfile: Boolean) -> Unit = { _, _ -> },
     onResendClick: () -> Unit = {}
 ) {
     var otp by remember { mutableStateOf("") }
@@ -181,10 +181,10 @@ fun OtpScreen(
                         FirebaseAuthManager.verifyOtpAndAuthenticate(
                             verificationId = verificationId,
                             code = otp,
-                            onSuccess = { token ->
+                            onSuccess = { token, hasProfile ->
                                 (context as? Activity)?.runOnUiThread {
                                     isLoading = false
-                                    onVerifySuccess(token)
+                                    onVerifySuccess(token, hasProfile)
                                 }
                             },
                             onFailure = { exception ->
@@ -211,7 +211,7 @@ fun OtpScreenPreview() {
         verificationId = "mock-id",
         phoneNumber = "+91 98765 00001",
         onBackClick = {},
-        onVerifySuccess = {},
+        onVerifySuccess = { _, _ -> },
         onResendClick = {}
     )
 }

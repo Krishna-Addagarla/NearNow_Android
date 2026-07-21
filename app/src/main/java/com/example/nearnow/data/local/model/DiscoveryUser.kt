@@ -20,7 +20,8 @@ data class DiscoveryUser(
     val photoUrls: List<String> = emptyList(),
     val interests: List<String> = emptyList(),
     val isOnline: Boolean = false,
-    val isVerified: Boolean = false
+    val isVerified: Boolean = false,
+    val gender: String = "Male"
 ) {
     companion object {
         val mockUsers = listOf(
@@ -40,7 +41,8 @@ data class DiscoveryUser(
                 photoUrls = listOf("photo_arjun_1"),
                 interests = listOf("COFFEE", "MUSIC", "RUNNING"),
                 isOnline = true,
-                isVerified = true
+                isVerified = true,
+                gender = "Male"
             ),
             DiscoveryUser(
                 id = "2",
@@ -57,7 +59,8 @@ data class DiscoveryUser(
                 photoUrls = listOf("photo_sneha_1", "photo_sneha_2"),
                 interests = listOf("BOARDS", "ART", "COFFEE", "TRAVEL"),
                 isOnline = true,
-                isVerified = false
+                isVerified = false,
+                gender = "Female"
             ),
             DiscoveryUser(
                 id = "3",
@@ -74,7 +77,8 @@ data class DiscoveryUser(
                 photoUrls = emptyList(),
                 interests = listOf("FOOD", "TRAVEL", "MUSIC"),
                 isOnline = false,
-                isVerified = true
+                isVerified = true,
+                gender = "Male"
             ),
             DiscoveryUser(
                 id = "4",
@@ -92,7 +96,8 @@ data class DiscoveryUser(
                 photoUrls = listOf("photo_priya_1"),
                 interests = listOf("COFFEE", "PHOTOGRAPHY", "ART"),
                 isOnline = true,
-                isVerified = true
+                isVerified = true,
+                gender = "Female"
             ),
             DiscoveryUser(
                 id = "5",
@@ -110,7 +115,8 @@ data class DiscoveryUser(
                 photoUrls = emptyList(),
                 interests = listOf("RUNNING", "CYCLING", "COFFEE"),
                 isOnline = false,
-                isVerified = false
+                isVerified = false,
+                gender = "Male"
             ),
             DiscoveryUser(
                 id = "6",
@@ -127,7 +133,8 @@ data class DiscoveryUser(
                 photoUrls = emptyList(),
                 interests = listOf("MUSIC", "TREKKING", "TRAVEL"),
                 isOnline = true,
-                isVerified = false
+                isVerified = false,
+                gender = "Female"
             )
         )
     }

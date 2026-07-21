@@ -49,6 +49,7 @@ fun ProfileSetupStepShell(
     primaryButtonText: String,
     onPrimaryClick: () -> Unit,
     primaryEnabled: Boolean = true,
+    primaryLoading: Boolean = false,
     secondaryButtonText: String? = null,
     onSecondaryClick: () -> Unit = {},
     body: @Composable () -> Unit
@@ -120,7 +121,8 @@ fun ProfileSetupStepShell(
                 NearNowPrimaryButton(
                     text = primaryButtonText,
                     onClick = onPrimaryClick,
-                    enabled = primaryEnabled,
+                    enabled = primaryEnabled && !primaryLoading,
+                    isLoading = primaryLoading,
                     modifier = Modifier.fillMaxWidth()
                 )
 

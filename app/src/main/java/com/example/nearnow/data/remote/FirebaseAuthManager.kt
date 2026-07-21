@@ -94,7 +94,7 @@ object FirebaseAuthManager {
     fun verifyOtpAndAuthenticate(
         verificationId: String,
         code: String,
-        onSuccess: (token: String) -> Unit,
+        onSuccess: (token: String, hasProfile: Boolean) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         Log.d(TAG, "verifyOtpAndAuthenticate verificationId: $verificationId")
@@ -138,7 +138,7 @@ object FirebaseAuthManager {
 
     private fun verifyTokenWithBackend(
         idToken: String,
-        onSuccess: (token: String) -> Unit,
+        onSuccess: (token: String, hasProfile: Boolean) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         val json = JSONObject().apply {
@@ -169,7 +169,8 @@ object FirebaseAuthManager {
                     try {
                         val jsonResponse = JSONObject(bodyString)
                         val accessToken = jsonResponse.getString("access_token")
-                        onSuccess(accessToken)
+                        val hasProfile = jsonResponse.optBoolean("has_profile", false)
+                        onSuccess(accessToken, hasProfile)
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to parse token response", e)
                         onFailure(e)

@@ -88,8 +88,8 @@ fun OnboardingScreen(
                     BulletItem(text = "Pause chats when out of range")
                 }
             },
-            primaryButtonText = "ALLOW LOCATION ACCESS",
-            secondaryButtonText = "NOT NOW"
+            primaryButtonText = "CREATE ACCOUNT",
+            secondaryButtonText = "LOG IN"
         )
     )
 

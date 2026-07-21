@@ -34,6 +34,7 @@ import kotlin.math.roundToInt
 fun ProfileRadiusScreen(
     minMeters: Int = 100,
     maxMeters: Int = 50000,
+    isSubmitting: Boolean = false,
     onStartExploringClick: (radiusMeters: Int) -> Unit = {}
 ) {
     var radiusMeters by remember { mutableFloatStateOf(2000f) }
@@ -44,6 +45,7 @@ fun ProfileRadiusScreen(
         stepLabel = "STEP 04 / 04 — DONE",
         title = "How close\nis close?",
         primaryButtonText = "START EXPLORING",
+        primaryLoading = isSubmitting,
         onPrimaryClick = { onStartExploringClick(radiusMeters.roundToInt()) }
     ) {
         Column(
